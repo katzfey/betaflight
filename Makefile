@@ -168,7 +168,8 @@ else
 ifeq ($(DEBUG),INFO)
 DEBUG_FLAGS            = -ggdb2
 endif
-OPTIMISATION_BASE     := -flto=auto -fuse-linker-plugin -ffast-math -fmerge-all-constants
+# OPTIMISATION_BASE     := -flto=auto -fuse-linker-plugin -ffast-math -fmerge-all-constants
+OPTIMISATION_BASE     := -ffast-math -fmerge-all-constants
 OPTIMISE_DEFAULT      := -O2
 OPTIMISE_SPEED        := -Ofast
 OPTIMISE_SIZE         := -Os
@@ -263,8 +264,10 @@ CCACHE :=
 endif
 
 # Tool names
-CROSS_CC    := $(CCACHE) $(ARM_SDK_PREFIX)gcc
-CROSS_CXX   := $(CCACHE) $(ARM_SDK_PREFIX)g++
+# CROSS_CC    := $(CCACHE) $(ARM_SDK_PREFIX)gcc
+CROSS_CC    := $(CCACHE) hexagon-clang
+# CROSS_CXX   := $(CCACHE) $(ARM_SDK_PREFIX)g++
+CROSS_CXX   := $(CCACHE) hexagon-clang++
 CROSS_GDB   := $(ARM_SDK_PREFIX)gdb
 OBJCOPY     := $(ARM_SDK_PREFIX)objcopy
 OBJDUMP     := $(ARM_SDK_PREFIX)objdump
@@ -288,12 +291,13 @@ TEMPORARY_FLAGS :=
 
 EXTRA_WARNING_FLAGS := -Wold-style-definition
 
+# -Wall -Wextra -Werror -Wunsafe-loop-optimizations -Wdouble-promotion
 CFLAGS     += $(ARCH_FLAGS) \
               $(addprefix -D,$(OPTIONS)) \
               $(addprefix -I,$(INCLUDE_DIRS)) \
               $(DEBUG_FLAGS) \
               -std=gnu17 \
-              -Wall -Wextra -Werror -Wunsafe-loop-optimizations -Wdouble-promotion \
+              -Wall -Wextra -Werror -Wdouble-promotion \
               $(EXTRA_WARNING_FLAGS) \
               -ffunction-sections \
               -fdata-sections \
