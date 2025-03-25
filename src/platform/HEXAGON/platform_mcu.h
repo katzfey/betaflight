@@ -18,38 +18,5 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
+#pragma once
 
-#include "platform.h"
-
-#include "fc/init.h"
-
-#include "scheduler/scheduler.h"
-
-void run(void);
-
-int betaflight_main(int argc, char * argv[])
-{
-#ifdef SIMULATOR_BUILD
-    targetParseArgs(argc, argv);
-#else
-    UNUSED(argc);
-    UNUSED(argv);
-#endif
-    init();
-
-    run();
-
-    return 0;
-}
-
-void FAST_CODE run(void)
-{
-    while (true) {
-        scheduler();
-#ifdef SIMULATOR_BUILD
-        delayMicroseconds_real(50); // max rate 20kHz
-#endif
-    }
-}
