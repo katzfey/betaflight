@@ -20,3 +20,4 @@
 
 #pragma once
 
+void HAP_printf(const char *format, ...);

@@ -2,13 +2,40 @@
 #include <stdint.h>
 #include <pthread.h>
 
+extern void HAP_debug(const char *msg, int level, const char *filename, int line);
+
+// void HAP_printf(const char *file, int line, const char *format, ...)
+void HAP_printf(const char *format, ...)
+{
+	va_list ap;
+	char buf[300];
+
+	va_start(ap, format);
+	vsnprintf(buf, sizeof(buf), format, ap);
+	va_end(ap);
+	HAP_debug(buf, 0, "test.c", 1);
+	//usleep(20000);
+}
+
 void init(void)
 {
+    HAP_printf("betaflight init");
+
 	return;
 }
 
 void scheduler(void)
 {
+	static int debug_print = 0;
+
+	if (debug_print == 100000) {
+    	HAP_printf("betaflight scheduler");
+		debug_print = 0;
+	}
+	debug_print++;
+
+	qurt_timer_sleep(10);
+
 	return;
 }
 
@@ -30,7 +57,8 @@ void *main_thread_trampoline(void *arg)
 
 int slpi_link_client_init(void)
 {
-    // HAP_PRINTF("About to call qurt_ardupilot_main %p", &qurt_ardupilot_main);
+    HAP_printf("About to call betaflight_main %p", &betaflight_main);
+
     struct sched_param param = { .sched_priority = 128 };
     pthread_attr_t attr;
     pthread_attr_init(&attr);
