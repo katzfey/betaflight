@@ -2,6 +2,10 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#include "platform.h"
+#include "io/serial.h"
+#include "common/printf_serial.h"
+
 extern void HAP_debug(const char *msg, int level, const char *filename, int line);
 
 // void HAP_printf(const char *file, int line, const char *format, ...)
@@ -20,6 +24,11 @@ void HAP_printf(const char *format, ...)
 void init(void)
 {
     HAP_printf("betaflight init");
+
+#if SERIAL_PORT_COUNT > 0
+    HAP_printf("printfSerialInit");
+    printfSerialInit();
+#endif
 
 	return;
 }

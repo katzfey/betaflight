@@ -19,15 +19,20 @@ LINKFLAGS += $(TOOLCHAIN_DIR)/target/hexagon/lib/v66/G0/pic/libgcc.a
 LINKFLAGS += --wrap=malloc --wrap=calloc --wrap=free --wrap=realloc --wrap=printf
 LINKFLAGS += --wrap=strdup --wrap=__stack_chk_fail -lc
 
-vpath %.c src/main \
-          src/platform/HEXAGON \
-          src/platform/HEXAGON/target/HEXAGONV66
+#vpath %.c src/main \
+#          src/main/io \
+#          src/platform/HEXAGON \
+#          src/platform/HEXAGON/target/HEXAGONV66
 
-SRC = main.c hexagon_main.c
+SRC = src/main/main.c \
+      src/main/common/printf_serial.c \
+      src/platform/HEXAGON/target/HEXAGONV66/hexagon_main.c
+#      src/main/common/printf.c
+#      src/main/io/serial.c
 
 TARGET_BIN_DIR = bin
 TARGET_OBJ_DIR = obj
-TARGET_OBJS = $(addsuffix .o,$(addprefix $(TARGET_OBJ_DIR)/,$(basename $(SRC))))
+TARGET_OBJS = $(addsuffix .o,$(addprefix $(TARGET_OBJ_DIR)/, $(basename $(SRC))))
 
 $(info "Target objects: $(TARGET_OBJS)")
 
@@ -47,6 +52,7 @@ $(TARGET_BIN_DIR):
 	mkdir -p bin
 
 $(TARGET_OBJ_DIR)/%.o: %.c $(TARGET_OBJ_DIR) $(TARGET_BIN_DIR)
+	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 betaflight: $(TARGET_OBJS)
