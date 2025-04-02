@@ -25,8 +25,13 @@ LINKFLAGS += --wrap=strdup --wrap=__stack_chk_fail -lc
 #          src/platform/HEXAGON/target/HEXAGONV66
 
 SRC = src/main/main.c \
-      src/main/common/printf_serial.c \
-      src/platform/HEXAGON/target/HEXAGONV66/hexagon_main.c
+      src/platform/HEXAGON/target/HEXAGONV66/hexagon_main.c \
+      src/main/pg/pg.c \
+      src/main/common/crc.c \
+      src/main/common/streambuf.c \
+      src/main/pg/scheduler.c
+
+#      src/main/common/printf_serial.c
 #      src/main/common/printf.c
 #      src/main/io/serial.c
 

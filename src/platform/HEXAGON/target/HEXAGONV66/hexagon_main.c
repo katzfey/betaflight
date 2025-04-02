@@ -3,10 +3,17 @@
 #include <pthread.h>
 
 #include "platform.h"
-#include "io/serial.h"
-#include "common/printf_serial.h"
+// #include "io/serial.h"
+// #include "common/printf_serial.h"
 
 extern void HAP_debug(const char *msg, int level, const char *filename, int line);
+
+#include "pg/pg.h"
+
+const pgRegistry_t __pg_registry_start[32];
+const pgRegistry_t __pg_registry_end[32];
+const uint8_t __pg_resetdata_start[32];
+const uint8_t __pg_resetdata_end[32];
 
 // void HAP_printf(const char *file, int line, const char *format, ...)
 void HAP_printf(const char *format, ...)
@@ -25,10 +32,10 @@ void init(void)
 {
     HAP_printf("betaflight init");
 
-#if SERIAL_PORT_COUNT > 0
-    HAP_printf("printfSerialInit");
-    printfSerialInit();
-#endif
+// #if SERIAL_PORT_COUNT > 0
+//     HAP_printf("printfSerialInit");
+//     printfSerialInit();
+// #endif
 
 	return;
 }

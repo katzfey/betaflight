@@ -20,12 +20,14 @@
 
 #pragma once
 
-typedef struct
-{
-  uint32_t IDR;
-  uint32_t ODR;
-  uint32_t BSRR;
-  uint32_t BRR;
-} GPIO_TypeDef;
+#include <stdint.h>
+
+// typedef struct
+// {
+//   uint32_t IDR;
+//   uint32_t ODR;
+//   uint32_t BSRR;
+//   uint32_t BRR;
+// } GPIO_TypeDef;
 
 void HAP_printf(const char *format, ...);
