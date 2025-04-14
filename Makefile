@@ -314,6 +314,9 @@ CFLAGS     += $(ARCH_FLAGS) \
               $(CONFIG_REVISION_DEFINE) \
               -pipe \
               -MMD -MP \
+              -fPIC -G0 -mv66 -fPIC -mcpu=hexagonv66 \
+              -fomit-frame-pointer -fmerge-all-constants -fno-signed-zeros -fno-trapping-math \
+              -freciprocal-math -fno-math-errno -fno-strict-aliasing -fvisibility=hidden -fno-rtti -fmath-errno \
               $(EXTRA_FLAGS)
 
 ASFLAGS     = $(ARCH_FLAGS) \
@@ -323,22 +326,30 @@ ASFLAGS     = $(ARCH_FLAGS) \
               -MMD -MP
 
 ifeq ($(LD_FLAGS),)
-LD_FLAGS     = -lm \
-              -nostartfiles \
-              --specs=nano.specs \
-              -lc \
-              -lnosys \
-              $(ARCH_FLAGS) \
-              $(LTO_FLAGS) \
-              $(DEBUG_FLAGS) \
-              -static \
-              -Wl,-gc-sections,-Map,$(TARGET_MAP) \
-              -Wl,-L$(LINKER_DIR) \
-              -Wl,--cref \
-              -Wl,--no-wchar-size-warning \
-              -Wl,--print-memory-usage \
-              -T$(LD_SCRIPT) \
-               $(EXTRA_LD_FLAGS)
+# LD_FLAGS     = -lm \
+#               -nostartfiles \
+#               --specs=nano.specs \
+#               -lc \
+#               -lnosys \
+#               $(ARCH_FLAGS) \
+#               $(LTO_FLAGS) \
+#               $(DEBUG_FLAGS) \
+#               -static \
+#               -Wl,-gc-sections,-Map,$(TARGET_MAP) \
+#               -Wl,-L$(LINKER_DIR) \
+#               -Wl,--cref \
+#               -Wl,--no-wchar-size-warning \
+#               -Wl,--print-memory-usage \
+#               -T$(LD_SCRIPT) \
+#                $(EXTRA_LD_FLAGS)
+
+LD_FLAGS = -march=hexagon -mcpu=hexagonv66 -shared -call_shared -G0
+LD_FLAGS += $(TOOLS_DIR)/../target/hexagon/lib/v66/G0/pic/initS.o
+LD_FLAGS += -L$(TOOLS_DIR)/../target/hexagon/lib/v66/G0/pic
+LD_FLAGS += -Bsymbolic
+LD_FLAGS += $(TOOLS_DIR)/../target/hexagon/lib/v66/G0/pic/libgcc.a
+LD_FLAGS += --wrap=malloc --wrap=calloc --wrap=free --wrap=realloc --wrap=printf
+LD_FLAGS += --wrap=strdup --wrap=__stack_chk_fail -lc
 endif
 
 ###############################################################################
@@ -464,8 +475,10 @@ endif
 
 $(TARGET_ELF): $(TARGET_OBJS) $(LD_SCRIPT) $(LD_SCRIPTS)
 	@echo "Linking $(TARGET_NAME)" "$(STDOUT)"
-	$(V1) $(CROSS_CC) -o $@ $(filter-out %.ld,$^) $(LD_FLAGS)
-	$(V1) $(SIZE) $(TARGET_ELF)
+	hexagon-link $(LD_FLAGS) -o $(TARGET_ELF) $(TARGET_OBJS)
+	cp $(TARGET_ELF) test.so
+	# $(V1) $(CROSS_CC) -o $@ $(filter-out %.ld,$^) $(LD_FLAGS)
+	# $(V1) $(SIZE) $(TARGET_ELF)
 
 # Compile
 

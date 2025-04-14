@@ -87,7 +87,6 @@ COMMON_SRC = \
             config/simplified_tuning.c \
             cli/cli.c \
             cli/settings.c \
-            config/config.c \
             drivers/dshot.c \
             drivers/dshot_command.c \
             drivers/buf_writer.c \
@@ -292,7 +291,6 @@ COMMON_SRC += \
             drivers/serial_uart.c \
             drivers/accgyro/accgyro_spi_icm426xx.c \
             drivers/accgyro/accgyro_virtual.c \
-            drivers/accgyro/gyro_sync.c \
             BoschSensortec/BMI270-Sensor-API/bmi270_maximum_fifo.c \
             drivers/barometer/barometer_virtual.c \
             drivers/compass/compass_virtual.c \

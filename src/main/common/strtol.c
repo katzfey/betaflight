@@ -123,12 +123,12 @@ long strtol(const char * str, char ** endptr, int base)
     return _strto_l(str, endptr, base, 1);
 }
 
-unsigned long strtoul(const char * str, char ** endptr, int base)
-{
-    return _strto_l(str, endptr, base, 0);
-}
+// unsigned long strtoul(const char * str, char ** endptr, int base)
+// {
+//     return _strto_l(str, endptr, base, 0);
+// }
 
-int atoi(const char *str)
-{
-    return strtol(str, NULL, 10);
-}
+// int atoi(const char *str)
+// {
+//     return strtol(str, NULL, 10);
+// }
