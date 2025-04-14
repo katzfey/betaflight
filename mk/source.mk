@@ -290,42 +290,11 @@ ifneq ($(SIMULATOR_BUILD),yes)
 COMMON_SRC += \
             drivers/bus_spi.c \
             drivers/serial_uart.c \
-            drivers/accgyro/accgyro_mpu6050.c \
-            drivers/accgyro/accgyro_mpu6500.c \
-            drivers/accgyro/accgyro_mpu.c \
-            drivers/accgyro/accgyro_spi_bmi160.c \
-            drivers/accgyro/accgyro_spi_bmi270.c \
-            drivers/accgyro/accgyro_spi_icm20649.c \
-            drivers/accgyro/accgyro_spi_icm20689.c \
             drivers/accgyro/accgyro_spi_icm426xx.c \
-            drivers/accgyro/accgyro_spi_l3gd20.c \
-            drivers/accgyro/accgyro_spi_lsm6dso.c \
-            drivers/accgyro/accgyro_spi_lsm6dso_init.c \
-            drivers/accgyro/accgyro_spi_lsm6dsv16x.c \
-            drivers/accgyro/accgyro_spi_mpu6000.c \
-            drivers/accgyro/accgyro_spi_mpu6500.c \
-            drivers/accgyro/accgyro_spi_mpu9250.c \
             drivers/accgyro/accgyro_virtual.c \
             drivers/accgyro/gyro_sync.c \
             BoschSensortec/BMI270-Sensor-API/bmi270_maximum_fifo.c \
-            drivers/barometer/barometer_2smpb_02b.c \
-            drivers/barometer/barometer_bmp085.c \
-            drivers/barometer/barometer_bmp280.c \
-            drivers/barometer/barometer_bmp388.c \
-            drivers/barometer/barometer_dps310.c \
-            drivers/barometer/barometer_lps22df.c \
-            drivers/barometer/barometer_lps.c \
-            drivers/barometer/barometer_ms5611.c \
-            drivers/barometer/barometer_qmp6988.c \
             drivers/barometer/barometer_virtual.c \
-            drivers/compass/compass_ak8963.c \
-            drivers/compass/compass_ak8975.c \
-            drivers/compass/compass_hmc5883l.c \
-            drivers/compass/compass_ist8310.c \
-            drivers/compass/compass_lis2mdl.c \
-            drivers/compass/compass_lis3mdl.c \
-            drivers/compass/compass_mpu925x_ak8963.c \
-            drivers/compass/compass_qmc5883l.c \
             drivers/compass/compass_virtual.c \
             drivers/max7456.c \
             drivers/vtx_rtc6705.c \
@@ -375,27 +344,7 @@ VPATH        := $(VPATH):$(FATFS_DIR)
 
 # Gyro driver files that only contain initialization and configuration code - not runtime code
 SIZE_OPTIMISED_SRC += \
-            drivers/accgyro/accgyro_mpu6050.c \
-            drivers/accgyro/accgyro_mpu6500.c \
-            drivers/accgyro/accgyro_spi_mpu6000.c \
-            drivers/accgyro/accgyro_spi_mpu6500.c \
-            drivers/accgyro/accgyro_spi_mpu9250.c \
-            drivers/accgyro/accgyro_spi_icm20689.c \
             drivers/accgyro/accgyro_spi_icm426xx.c \
-            drivers/accgyro/accgyro_spi_lsm6dso_init.c \
-            drivers/barometer/barometer_bmp085.c \
-            drivers/barometer/barometer_bmp280.c \
-            drivers/barometer/barometer_ms5611.c \
-            drivers/barometer/barometer_lps.c \
-            drivers/barometer/barometer_qmp6988.c \
-            drivers/barometer/barometer_2smpb_02b.c \
-            drivers/compass/compass_ak8963.c \
-            drivers/compass/compass_ak8975.c \
-            drivers/compass/compass_hmc5883l.c \
-            drivers/compass/compass_qmc5883l.c \
-            drivers/compass/compass_lis2mdl.c \
-            drivers/compass/compass_lis3mdl.c \
-            drivers/compass/compass_ist8310.c \
             drivers/display_ug2864hsweg01.c \
             drivers/vtx_rtc6705_soft_spi.c \
             drivers/vtx_rtc6705.c
@@ -403,11 +352,7 @@ SIZE_OPTIMISED_SRC += \
 
 SPEED_OPTIMISED_SRC += \
             drivers/bus_spi.c \
-            drivers/serial_uart.c \
-            drivers/accgyro/accgyro_mpu.c \
-            drivers/accgyro/accgyro_spi_bmi160.c \
-            drivers/accgyro/accgyro_spi_bmi270.c \
-            drivers/accgyro/accgyro_spi_lsm6dso.c
+            drivers/serial_uart.c
 
 endif
 

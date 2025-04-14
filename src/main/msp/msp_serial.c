@@ -542,6 +542,8 @@ void mspSerialProcess(mspEvaluateNonMspData_e evaluateNonMspData, mspProcessComm
 #ifdef USE_MSP_DISPLAYPORT
                        // Don't evaluate non-MSP commands on VTX MSP port
                        && (mspPort->port->identifier != displayPortMspGetSerial())
+#else
+                       && (1 == 1)
 #endif
                        ) {
                 // evaluate the non-MSP data

@@ -344,6 +344,7 @@ static void mspFcSetPassthroughCommand(sbuf_t *dst, sbuf_t *src, mspPostProcessF
 }
 
 // TODO: Remove the pragma once this is called from unconditional code
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 static void configRebootUpdateCheckU8(uint8_t *parm, uint8_t value)
 {

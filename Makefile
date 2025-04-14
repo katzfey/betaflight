@@ -302,6 +302,7 @@ CFLAGS     += $(ARCH_FLAGS) \
               -ffunction-sections \
               -fdata-sections \
               -fno-common \
+              -fblocks \
               $(TEMPORARY_FLAGS) \
               $(DEVICE_FLAGS) \
               -D_GNU_SOURCE \
