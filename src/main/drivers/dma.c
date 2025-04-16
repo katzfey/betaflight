@@ -24,7 +24,13 @@
 
 #include "platform.h"
 
-#ifdef USE_DMA
+#ifndef USE_DMA
+
+booga
+#include "dma.h"
+dmaChannelDescriptor_t *dmaDescriptors;
+
+#else
 
 #include "drivers/nvic.h"
 #include "dma.h"

@@ -476,7 +476,7 @@ endif
 $(TARGET_ELF): $(TARGET_OBJS) $(LD_SCRIPT) $(LD_SCRIPTS)
 	@echo "Linking $(TARGET_NAME)" "$(STDOUT)"
 	hexagon-link $(LD_FLAGS) -o $(TARGET_ELF) $(TARGET_OBJS)
-	cp $(TARGET_ELF) test.so
+	mv $(TARGET_ELF) test.so
 	# $(V1) $(CROSS_CC) -o $@ $(filter-out %.ld,$^) $(LD_FLAGS)
 	# $(V1) $(SIZE) $(TARGET_ELF)
 

@@ -125,7 +125,13 @@ MCU_FLASH_SIZE	:= 8192
 #             HEXAGON/serial_usb_vcp.c \
 #             drivers/usb_io.c
 # 
-# MCU_COMMON_SRC = \
+MCU_COMMON_SRC = \
+             drivers/bus_i2c_config.c \
+             HEXAGON/bus_i2c_hexagon.c \
+             HEXAGON/bus_i2c_hexagon_init.c \
+             HEXAGON/audio_hexagon.c \
+             HEXAGON/unresolved.c
+
 #             drivers/accgyro/accgyro_mpu.c \
 #             drivers/bus_i2c_timing.c \
 #             drivers/dshot_bitbang_decode.c \

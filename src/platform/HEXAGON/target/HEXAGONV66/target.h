@@ -27,7 +27,9 @@
 
 #include "common/utils.h"
 
-#define TARGET_BOARD_IDENTIFIER "SITL"
+#define USE_I2C_OLED_DISPLAY
+
+#define TARGET_BOARD_IDENTIFIER "HEXAGON"
 
 #define UART_TRAIT_AF_PIN 1
 #define UART_TRAIT_AF_PORT 1
@@ -99,6 +101,10 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #define USE_BARO
 #define USE_VIRTUAL_BARO
 
+#define USE_GPS
+#define USE_GPS_UBLOX
+#define USE_GPS_LAP_TIMER
+
 #define USABLE_TIMER_CHANNEL_COUNT 0
 
 #define USE_UART1
@@ -113,15 +119,13 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #define DEFAULT_RX_FEATURE      FEATURE_RX_MSP
 #define DEFAULT_FEATURES        (FEATURE_GPS | FEATURE_TELEMETRY)
 
-#ifdef USE_GPS
-#define USE_VIRTUAL_GPS
-#endif
-
 #define USE_PARAMETER_GROUPS
 
 #ifndef USE_PWM_OUTPUT
 #define USE_PWM_OUTPUT
 #endif
+
+#define USE_TELEMETRY
 
 #undef USE_STACK_CHECK // I think SITL don't need this
 #undef USE_DASHBOARD
@@ -142,11 +146,12 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #undef USE_SERIALRX_XBUS
 #undef USE_LED_STRIP
 #undef USE_TELEMETRY_FRSKY_HUB
-#undef USE_TELEMETRY_HOTT
+#define USE_TELEMETRY_HOTT
+#define USE_HOTT_TEXTMODE
 #undef USE_TELEMETRY_SMARTPORT
 #undef USE_TELEMETRY_MAVLINK
 #undef USE_RESOURCE_MGMT
-#undef USE_CMS
+#define USE_CMS
 #undef USE_TELEMETRY_CRSF
 #undef USE_TELEMETRY_GHST
 #undef USE_TELEMETRY_IBUS
@@ -162,10 +167,12 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #undef USE_SERIAL_4WAY_BLHELI_BOOTLOADER
 #undef USE_SERIAL_4WAY_SK_BOOTLOADER
 
-#undef USE_I2C
+#define USE_I2C
 #undef USE_SPI
 
 #define TARGET_FLASH_SIZE 8192
+
+#define USE_SDCARD
 
 #define DEFIO_NO_PORTS   // suppress 'no pins defined' warning
 
