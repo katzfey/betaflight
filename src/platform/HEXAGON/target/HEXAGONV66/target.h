@@ -104,6 +104,7 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #define USE_GPS
 #define USE_GPS_UBLOX
 #define USE_GPS_LAP_TIMER
+#define USE_GPS_RESCUE
 
 #define USABLE_TIMER_CHANNEL_COUNT 0
 

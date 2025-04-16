@@ -43,6 +43,28 @@ const mcuTypeInfo_t *getMcuTypeInfo(void)
     return &info;
 }
 
+static void microsleep(uint32_t usec)
+{
+    struct timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = usec*1000UL;
+    while (nanosleep(&ts, &ts) == -1 && errno == EINTR);
+}
+
+void delayMicroseconds(uint32_t us)
+{
+    microsleep(us);
+}
+
+void delay(uint32_t ms)
+{
+    uint64_t start = millis64();
+
+    while ((millis64() - start) < ms) {
+        microsleep(1000);
+    }
+}
+
 static struct timespec start_time;
 
 uint64_t micros64(void)
@@ -195,3 +217,28 @@ IO_t IOGetByTag(ioTag_t tag)
     return NULL;
 }
 
+#include "drivers/motor_impl.h"
+#include "pg/motor.h"
+
+bool motorPwmDevInit(motorDevice_t *device, const motorDevConfig_t *motorConfig, uint16_t _idlePulse)
+{
+    (void)(device);
+    (void)(motorConfig);
+    (void)(_idlePulse);
+
+    // if (!device) {
+    //     return false;
+    // }
+    // device->vTable = &vTable;
+    // const uint8_t motorCount = device->count;
+    // printf("Initialized motor count %d\n", motorCount);
+    // pwmRawPkt.motorCount = motorCount;
+	// 
+    // idlePulse = _idlePulse;
+	// 
+    // for (int motorIndex = 0; motorIndex < MAX_SUPPORTED_MOTORS && motorIndex < motorCount; motorIndex++) {
+    //     pwmMotors[motorIndex].enabled = true;
+    // }
+
+    return true;
+}
