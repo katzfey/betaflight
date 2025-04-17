@@ -32,8 +32,8 @@ const uint8_t __pg_resetdata_end[1];
 char _estack;
 char _Min_Stack_Size;
 
-serialPinConfig_t serialPinConfig_System;
-serialPinConfig_t serialPinConfig_Copy;
+// serialPinConfig_t serialPinConfig_System;
+// serialPinConfig_t serialPinConfig_Copy;
 
 spiPinConfig_t spiPinConfig_SystemArray[0];
 
@@ -41,6 +41,22 @@ const mcuTypeInfo_t *getMcuTypeInfo(void)
 {
     static const mcuTypeInfo_t info = { .id = MCU_TYPE_SIMULATOR, .name = "SIMULATOR" };
     return &info;
+}
+
+// This is Posix but not in Qurt?
+int nanosleep(const struct timespec *duration, struct timespec *_Nullable rem)
+{
+	(void) duration;
+	(void) rem;
+	return -1;
+}
+
+// Why isn't this in Qurt?
+size_t strnlen(const char *s, size_t maxlen)
+{
+	(void) s;
+	(void) maxlen;
+	return 0;
 }
 
 static void microsleep(uint32_t usec)
@@ -67,11 +83,21 @@ void delay(uint32_t ms)
 
 static struct timespec start_time;
 
+uint32_t clockMicrosToCycles(uint32_t micros)
+{
+    return micros;
+}
+
 uint64_t micros64(void)
 {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return 1.0e6*((ts.tv_sec + (ts.tv_nsec*1.0e-9)) - (start_time.tv_sec + (start_time.tv_nsec*1.0e-9)));
+}
+
+uint32_t micros(void)
+{
+    return micros64() & 0xFFFFFFFF;
 }
 
 uint64_t millis64(void)
@@ -100,6 +126,7 @@ float clockCyclesToMicrosf(int32_t clockCycles)
 {
     return (float) clockCyclesToMicros(clockCycles);
 }
+
 // virtual EEPROM
 static FILE *eepromFd = NULL;
 
@@ -180,6 +207,12 @@ int __wrap_printf ( const char * format, ... )
 	return 0;
 }
 
+void indicateFailure(failureMode_e mode, int repeatCount)
+{
+    UNUSED(repeatCount);
+    printf("Failure LED flash for: [failureMode]!!! %d\n", mode);
+}
+
 void failureMode(failureMode_e mode)
 {
     printf("[failureMode]!!! %d\n", mode);
@@ -191,9 +224,38 @@ void debugInit(void)
     printf("debugInit\n");
 }
 
+void timerInit(void)
+{
+}
+
 void unusedPinsInit(void)
 {
     printf("unusedPinsInit\n");
+}
+
+uint8_t mpuGyroReadRegister(const extDevice_t *dev, uint8_t reg)
+{
+	(void) dev;
+	(void) reg;
+	return 0;
+}
+
+void IOConfigGPIO(IO_t io, ioConfig_t cfg)
+{
+    UNUSED(io);
+    UNUSED(cfg);
+}
+
+int IO_GPIOPortIdx(IO_t io)
+{
+    UNUSED(io);
+    return -1;
+}
+
+bool IORead(IO_t io)
+{
+    UNUSED(io);
+	return false;
 }
 
 void IOHi(IO_t io)
@@ -215,6 +277,10 @@ IO_t IOGetByTag(ioTag_t tag)
 {
     UNUSED(tag);
     return NULL;
+}
+
+void EXTIInit(void)
+{
 }
 
 #include "drivers/motor_impl.h"
@@ -241,4 +307,75 @@ bool motorPwmDevInit(motorDevice_t *device, const motorDevConfig_t *motorConfig,
     // }
 
     return true;
+}
+
+// system
+void systemInit(void)
+{
+    // int ret;
+	// 
+    // clock_gettime(CLOCK_MONOTONIC, &start_time);
+    // printf("[system]Init...\n");
+	// 
+    // SystemCoreClock = 500 * 1e6; // virtual 500MHz
+	// 
+    // if (pthread_mutex_init(&updateLock, NULL) != 0) {
+    //     printf("Create updateLock error!\n");
+    //     exit(1);
+    // }
+	// 
+    // if (pthread_mutex_init(&mainLoopLock, NULL) != 0) {
+    //     printf("Create mainLoopLock error!\n");
+    //     exit(1);
+    // }
+	// 
+    // ret = pthread_create(&tcpWorker, NULL, tcpThread, NULL);
+    // if (ret != 0) {
+    //     printf("Create tcpWorker error!\n");
+    //     exit(1);
+    // }
+	// 
+    // ret = udpInit(&pwmLink, simulator_ip, PORT_PWM, false);
+    // printf("[SITL] init PwmOut UDP link to gazebo %s:%d...%d\n", simulator_ip, PORT_PWM, ret);
+	// 
+    // ret = udpInit(&pwmRawLink, simulator_ip, PORT_PWM_RAW, false);
+    // printf("[SITL] init PwmOut UDP link to RF9 %s:%d...%d\n", simulator_ip, PORT_PWM_RAW, ret);
+	// 
+    // ret = udpInit(&stateLink, NULL, PORT_STATE, true);
+    // printf("[SITL] start UDP server @%d...%d\n", PORT_STATE, ret);
+	// 
+    // ret = udpInit(&rcLink, NULL, PORT_RC, true);
+    // printf("[SITL] start UDP server for RC input @%d...%d\n", PORT_RC, ret);
+	// 
+    // ret = pthread_create(&udpWorker, NULL, udpThread, NULL);
+    // if (ret != 0) {
+    //     printf("Create udpWorker error!\n");
+    //     exit(1);
+    // }
+	// 
+    // ret = pthread_create(&udpWorkerRC, NULL, udpRCThread, NULL);
+    // if (ret != 0) {
+    //     printf("Create udpRCThread error!\n");
+    //     exit(1);
+    // }
+}
+
+void systemResetToBootloader(bootloaderRequestType_e requestType)
+{
+    UNUSED(requestType);
+
+    // printf("[system]ResetToBootloader!\n");
+    // workerRunning = false;
+    // pthread_join(tcpWorker, NULL);
+    // pthread_join(udpWorker, NULL);
+    // exit(0);
+}
+
+void systemReset(void)
+{
+    // printf("[system]Reset!\n");
+    // workerRunning = false;
+    // pthread_join(tcpWorker, NULL);
+    // pthread_join(udpWorker, NULL);
+    // exit(0);
 }

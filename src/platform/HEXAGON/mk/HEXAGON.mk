@@ -6,6 +6,10 @@
 # CFLAGS               += -DDEBUG_HARDFAULTS
 # endif
 
+HEXAGON_SDK_DIR = /opt/hexagon-sdk/4.1.0.4-lite
+INCLUDE_DIRS += $(HEXAGON_SDK_DIR)/rtos/qurt/computev66/include/qurt \
+                $(HEXAGON_SDK_DIR)/rtos/qurt/computev66/include/posix
+
 $(info In Hexagon makefile)
 
 #CMSIS
@@ -130,9 +134,15 @@ MCU_COMMON_SRC = \
              HEXAGON/bus_i2c_hexagon.c \
              HEXAGON/bus_i2c_hexagon_init.c \
              HEXAGON/audio_hexagon.c \
-             HEXAGON/unresolved.c
+             HEXAGON/serial_uart_hexagon.c \
+             HEXAGON/serial_uart_hw.c \
+             drivers/serial_pinconfig.c \
+             drivers/serial_uart_pinconfig.c \
+             HEXAGON/unresolved.c \
+             HEXAGON/target/HEXAGONV66/hexagon_main.c
 
-#             drivers/accgyro/accgyro_mpu.c \
+#              drivers/accgyro/accgyro_mpu.c \
+
 #             drivers/bus_i2c_timing.c \
 #             drivers/dshot_bitbang_decode.c \
 #             HEXAGON/adc_hexagonv66.c \
@@ -161,8 +171,6 @@ MCU_COMMON_SRC = \
 #             HEXAGON/camera_control_stm32.c \
 #             drivers/adc.c \
 #             drivers/serial_escserial.c \
-#             drivers/serial_pinconfig.c \
-#             drivers/serial_uart_pinconfig.c \
 #             HEXAGON/startup/system_hexagonv66.c
 # 
 # MSC_SRC = \

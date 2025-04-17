@@ -30,5 +30,4 @@
 
 #define SPIDEV_COUNT        0
 
-// no serial pins are defined for the simulator
-#define SERIAL_TRAIT_PIN_CONFIG 0
+#define SERIAL_TRAIT_PIN_CONFIG 1

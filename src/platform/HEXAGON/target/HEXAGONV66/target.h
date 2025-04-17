@@ -117,6 +117,8 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #define USE_UART7
 #define USE_UART8
 
+#undef USE_DMA
+
 #define DEFAULT_RX_FEATURE      FEATURE_RX_MSP
 #define DEFAULT_FEATURES        (FEATURE_GPS | FEATURE_TELEMETRY)
 
