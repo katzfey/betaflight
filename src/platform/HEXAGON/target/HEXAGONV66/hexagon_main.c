@@ -21,6 +21,18 @@ void HAP_printf(const char *format, ...)
 	//usleep(20000);
 }
 
+int __wrap_printf(const char * format, ...)
+{
+	va_list ap;
+	char buf[300];
+
+	va_start(ap, format);
+	vsnprintf(buf, sizeof(buf), format, ap);
+	va_end(ap);
+	HAP_debug(buf, 0, "hexagon_main.c", 1);
+	return 0;
+}
+
 #define __EXPORT __attribute__ ((visibility ("default")))
 
 // Called by the SLPI LINK server to initialize and start AP
@@ -29,18 +41,18 @@ int slpi_link_client_init(void) __EXPORT;
 // Called by the SLPI LINK server when there is a new message for AP
 int slpi_link_client_receive(const uint8_t *data, int data_len_in_bytes) __EXPORT;
 
-// extern int betaflight_main(int argc, char * argv[]);
+extern int betaflight_main(int argc, char * argv[]);
 
 void *main_thread_trampoline(void *arg)
 {
 	(void) arg;
-	// betaflight_main(0, NULL);
+	betaflight_main(0, NULL);
     return NULL;
 }
 
 int slpi_link_client_init(void)
 {
-    HAP_printf("About to call betaflight_main");
+    // HAP_printf("About to call betaflight_main");
     // HAP_printf("About to call betaflight_main %p", &betaflight_main);
 
     struct sched_param param = { .sched_priority = 128 };

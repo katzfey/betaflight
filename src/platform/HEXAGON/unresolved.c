@@ -201,12 +201,6 @@ configStreamerResult_e configWriteWord(uintptr_t address, config_streamer_buffer
     return CONFIG_RESULT_SUCCESS;
 }
 
-int __wrap_printf ( const char * format, ... )
-{
-	(void) format;
-	return 0;
-}
-
 void indicateFailure(failureMode_e mode, int repeatCount)
 {
     UNUSED(repeatCount);

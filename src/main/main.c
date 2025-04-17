@@ -18,6 +18,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -29,7 +30,7 @@
 
 void run(void);
 
-int main(int argc, char * argv[])
+int betaflight_main(int argc, char * argv[])
 {
 #ifdef SIMULATOR_BUILD
     targetParseArgs(argc, argv);
@@ -37,9 +38,11 @@ int main(int argc, char * argv[])
     UNUSED(argc);
     UNUSED(argv);
 #endif
+	printf("In betaflight_main");
+
     init();
 
-    run();
+    // run();
 
     return 0;
 }
