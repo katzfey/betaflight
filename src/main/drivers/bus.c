@@ -169,21 +169,25 @@ bool busBusy(const extDevice_t *dev, bool *error)
 #if !defined(USE_I2C)
     UNUSED(error);
 #endif
-    switch (dev->bus->busType) {
+    if (dev->bus) {
+	    switch (dev->bus->busType) {
 #ifdef USE_SPI
-    case BUS_TYPE_SPI:
-        // No waiting on SPI
-        return false;
+	    case BUS_TYPE_SPI:
+	        // No waiting on SPI
+	        return false;
 #endif
 
 #ifdef USE_I2C
-    case BUS_TYPE_I2C:
-        return i2cBusBusy(dev, error);
+	    case BUS_TYPE_I2C:
+	        return i2cBusBusy(dev, error);
 #endif
 
-    default:
-        return false;
+	    default:
+	        return false;
+	    }
     }
+
+    return false;
 }
 
 uint8_t busReadRegister(const extDevice_t *dev, uint8_t reg)
