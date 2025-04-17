@@ -73,7 +73,7 @@ extern size_t strnlen(const char s[], size_t maxlen);
 //#define SIMULATOR_GYROPID_SYNC
 
 // file name to save config
-#define EEPROM_FILENAME "eeprom.bin"
+#define EEPROM_FILENAME "/data/betaflight/eeprom.bin"
 #define CONFIG_IN_FILE
 #define EEPROM_SIZE     32768
 
