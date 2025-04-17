@@ -262,25 +262,39 @@ static void sdCardAndFSInit(void)
 }
 #endif
 
+#include <stdio.h>
+
 void init(void)
 {
+	printf("In init");
+
 #if SERIAL_PORT_COUNT > 0
     printfSerialInit();
 #endif
 
+	printf("before systemInit");
+
     systemInit();
+
+	printf("before tasksInitData");
 
     // Initialize task data as soon as possible. Has to be done before tasksInit(),
     // and any init code that may try to modify task behaviour before tasksInit().
     tasksInitData();
 
+	printf("before IOInitGlobal");
+
     // initialize IO (needed for all IO operations)
     IOInitGlobal();
+
+	printf("before targetConfiguration");
 
 #if defined(USE_TARGET_CONFIG)
     // Call once before the config is loaded for any target specific configuration required to support loading the config
     targetConfiguration();
 #endif
+
+	printf("before configTargetPreInit");
 
 #if defined(USE_CONFIG_TARGET_PREINIT)
     configTargetPreInit();
@@ -317,12 +331,18 @@ void init(void)
 #error "CONFIG_IN_SDCARD and TARGET_BUS_INIT are mutually exclusive"
 #endif
 
+	printf("before pgResetAll");
+
     pgResetAll();
+
+	printf("before configureSPIBusses");
 
 #ifdef USE_SDCARD_SPI
     configureSPIBusses();
     initFlags |= SPI_BUSSES_INIT_ATTEMPTED;
 #endif
+
+	printf("before sdCardAndFSInit");
 
     sdCardAndFSInit();
     initFlags |= SD_INIT_ATTEMPTED;
@@ -388,9 +408,15 @@ void init(void)
 
 #endif // CONFIG_IN_EXTERNAL_FLASH || CONFIG_IN_MEMORY_MAPPED_FLASH
 
+	printf("before initEEPROM");
+
     initEEPROM();
 
+	printf("before ensureEEPROMStructureIsValid");
+
     ensureEEPROMStructureIsValid();
+
+	printf("before readEEPROM");
 
     bool readSuccess = readEEPROM();
 
@@ -409,6 +435,8 @@ void init(void)
 #endif
 
     debugMode = systemConfig()->debug_mode;
+
+	printf("before targetPreInit");
 
 #ifdef TARGET_PREINIT
     targetPreInit();
@@ -509,6 +537,9 @@ void init(void)
 #endif
 #endif // USE_MCO
 
+	printf("before timerInit");
+
+
 #ifdef USE_TIMER
     timerInit();  // timer must be initialized before any channel is allocated
 #endif
@@ -556,6 +587,9 @@ void init(void)
 #if defined(USE_INVERTER) && !defined(SIMULATOR_BUILD)
     initInverters(serialPinConfig());
 #endif
+
+	printf("before targetBusInit");
+
 
 #ifdef TARGET_BUS_INIT
     targetBusInit();
