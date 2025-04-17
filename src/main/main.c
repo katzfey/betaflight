@@ -42,17 +42,25 @@ int betaflight_main(int argc, char * argv[])
 
     init();
 
-    // run();
+    run();
 
     return 0;
 }
 
+#ifdef HEXAGON
+#include "/opt/hexagon-sdk/4.1.0.4-lite/rtos/qurt/computev66/include/qurt/qurt_timer.h"
+#endif
+
 void FAST_CODE run(void)
 {
     while (true) {
+		printf("Calling scheduler");
         scheduler();
 #ifdef SIMULATOR_BUILD
         delayMicroseconds_real(50); // max rate 20kHz
+#endif
+#ifdef HEXAGON
+        qurt_timer_sleep(200000);
 #endif
     }
 }
