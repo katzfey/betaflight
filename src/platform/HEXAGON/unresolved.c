@@ -282,22 +282,22 @@ void EXTIInit(void)
 
 bool motorEn(void) { return true; }
 
-static const motorVTable_t vTable = {
-    .postInit = NULL,
-    .convertExternalToMotor = NULL,
-    .convertMotorToExternal = NULL,
-    .enable = motorEn,
-    .disable = NULL,
-    .isMotorEnabled = NULL,
-    .decodeTelemetry = NULL,
-    .write = NULL,
-    .writeInt = NULL,
-    .updateComplete = NULL,
-    .shutdown = NULL,
-    .requestTelemetry = NULL,
-    .isMotorIdle = NULL,
-    .getMotorIO = NULL,
-};
+// static const motorVTable_t vTable = {
+//     .postInit = NULL,
+//     .convertExternalToMotor = NULL,
+//     .convertMotorToExternal = NULL,
+//     .enable = motorEn,
+//     .disable = NULL,
+//     .isMotorEnabled = NULL,
+//     .decodeTelemetry = NULL,
+//     .write = NULL,
+//     .writeInt = NULL,
+//     .updateComplete = NULL,
+//     .shutdown = NULL,
+//     .requestTelemetry = NULL,
+//     .isMotorIdle = NULL,
+//     .getMotorIO = NULL,
+// };
 
 bool motorPwmDevInit(motorDevice_t *device, const motorDevConfig_t *motorConfig, uint16_t _idlePulse)
 {
@@ -307,7 +307,10 @@ bool motorPwmDevInit(motorDevice_t *device, const motorDevConfig_t *motorConfig,
     if (!device) {
         return false;
     }
-    device->vTable = &vTable;
+
+    motorNullDevInit(device);
+
+    // device->vTable = &vTable;
     // const uint8_t motorCount = device->count;
     printf("Initialized motor count %d\n", device->count);
     // pwmRawPkt.motorCount = motorCount;

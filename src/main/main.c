@@ -54,13 +54,13 @@ int betaflight_main(int argc, char * argv[])
 void FAST_CODE run(void)
 {
     while (true) {
-		printf("Calling scheduler");
+		// printf("Calling scheduler");
         scheduler();
 #ifdef SIMULATOR_BUILD
         delayMicroseconds_real(50); // max rate 20kHz
 #endif
 #ifdef HEXAGON
-        qurt_timer_sleep(200000);
+        qurt_timer_sleep(50);
 #endif
     }
 }
