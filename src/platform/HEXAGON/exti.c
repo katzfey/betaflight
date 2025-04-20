@@ -18,22 +18,50 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
 
-#define IOCFG_OUT_PP        0
-#define IOCFG_OUT_OD        0
-#define IOCFG_AF_PP         0
-#define IOCFG_AF_OD         0
-#define IOCFG_IPD           0
-#define IOCFG_IPU           0
-#define IOCFG_IN_FLOATING   0
+#include "platform.h"
 
-#define SPIDEV_COUNT        0
+#include "drivers/nvic.h"
+#include "drivers/io_impl.h"
+#include "drivers/exti.h"
 
-#define SERIAL_TRAIT_PIN_CONFIG 1
+void EXTIInit(void)
+{
 
-#define NVIC_PriorityGroup_2 0x500
+}
 
-#define SPI_IO_CS_CFG 5
 
-#define MAX_SPI_PIN_SEL 2
+void EXTIHandlerInit(extiCallbackRec_t *cb, extiHandlerCallback *fn)
+{
+	(void) cb;
+	(void) fn;
+}
+
+void EXTIConfig(IO_t io, extiCallbackRec_t *cb, int irqPriority, ioConfig_t config, extiTrigger_t trigger)
+{
+	(void) io;
+	(void) cb;
+	(void) irqPriority;
+	(void) config;
+	(void) trigger;
+}
+
+void EXTIRelease(IO_t io)
+{
+	(void) io;
+}
+
+void EXTIEnable(IO_t io)
+{
+	(void) io;
+}
+
+void EXTIDisable(IO_t io)
+{
+	(void) io;
+}
+
+

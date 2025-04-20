@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 
-#if !defined(UNIT_TEST) && !defined(HEXAGON)
+#if !defined(UNIT_TEST)
 // BASEPRI manipulation functions
 // only set_BASEPRI is implemented in device library. It does always create memory barrier
 // missing versions are implemented here
@@ -30,18 +30,20 @@
 // set BASEPRI register, do not create memory barrier
 __attribute__( ( always_inline ) ) static inline void __set_BASEPRI_nb(uint32_t basePri)
 {
-   __ASM volatile ("\tMSR basepri, %0\n" : : "r" (basePri) );
+   (void)(basePri);
+   // __ASM volatile ("\tMSR basepri, %0\n" : : "r" (basePri) );
 }
 
 // set BASEPRI_MAX register, do not create memory barrier
 __attribute__( ( always_inline ) ) static inline void __set_BASEPRI_MAX_nb(uint32_t basePri)
 {
-   __ASM volatile ("\tMSR basepri_max, %0\n" : : "r" (basePri) );
+   (void)(basePri);
+   // __ASM volatile ("\tMSR basepri_max, %0\n" : : "r" (basePri) );
 }
 
 #endif
 
-#if defined(UNIT_TEST) || defined(HEXAGON)
+#if defined(UNIT_TEST)
 // atomic related functions for unittest.
 
 extern uint8_t atomic_BASEPRI;

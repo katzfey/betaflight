@@ -18,22 +18,41 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
 
-#define IOCFG_OUT_PP        0
-#define IOCFG_OUT_OD        0
-#define IOCFG_AF_PP         0
-#define IOCFG_AF_OD         0
-#define IOCFG_IPD           0
-#define IOCFG_IPU           0
-#define IOCFG_IN_FLOATING   0
+#include "platform.h"
 
-#define SPIDEV_COUNT        0
+#include "common/utils.h"
+#include "common/maths.h"
 
-#define SERIAL_TRAIT_PIN_CONFIG 1
+#include "drivers/bus.h"
+#include "drivers/bus_spi.h"
+#include "drivers/bus_spi_impl.h"
+#include "drivers/dma.h"
+#include "drivers/io.h"
+#include "drivers/rcc.h"
+#include "pg/bus_spi.h"
 
-#define NVIC_PriorityGroup_2 0x500
+void spiInitDevice(SPIDevice device)
+{
+	(void) device;
+}
 
-#define SPI_IO_CS_CFG 5
+// DMA transfer setup and start
+void spiSequenceStart(const extDevice_t *dev)
+{
+	(void) dev;
+}
 
-#define MAX_SPI_PIN_SEL 2
+void spiPinConfigure(const spiPinConfig_t *pConfig)
+{
+	(void) pConfig;
+}
+
+uint16_t spiCalculateDivider(uint32_t freq)
+{
+	(void) freq;
+	return 1;
+}

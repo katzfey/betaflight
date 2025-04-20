@@ -90,10 +90,11 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #define USE_VIRTUAL_LED
 
 #define USE_ACC
-#define USE_VIRTUAL_ACC
+#define USE_ACC_SPI_ICM42688P
 
 #define USE_GYRO
-#define USE_VIRTUAL_GYRO
+#define USE_SPI_GYRO
+#define USE_GYRO_SPI_ICM42688P
 
 #define USE_MAG
 #define USE_VIRTUAL_MAG
@@ -171,7 +172,8 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #undef USE_SERIAL_4WAY_SK_BOOTLOADER
 
 #define USE_I2C
-#undef USE_SPI
+#define USE_SPI
+#define USE_SPI_DEVICE_1
 
 #define TARGET_FLASH_SIZE 8192
 
@@ -240,6 +242,12 @@ typedef struct
 {
     void* test;
 } SPI_TypeDef;
+
+#define SPI1 ((SPI_TypeDef *) 0x5000)
+
+#define __set_BASEPRI(VALUE) ((void) VALUE)
+#define __get_BASEPRI(VALUE) (0)
+#define __set_BASEPRI_MAX(VALUE) ((void) VALUE)
 
 typedef struct
 {

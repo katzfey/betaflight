@@ -134,14 +134,17 @@ MCU_COMMON_SRC = \
              HEXAGON/bus_i2c_hexagon.c \
              HEXAGON/bus_i2c_hexagon_init.c \
              HEXAGON/audio_hexagon.c \
+             HEXAGON/bus_spi_hexagon.c \
              HEXAGON/serial_uart_hexagon.c \
              HEXAGON/serial_uart_hw.c \
+             drivers/accgyro/accgyro_mpu.c \
              drivers/serial_pinconfig.c \
              drivers/serial_uart_pinconfig.c \
+             drivers/bus_spi_config.c \
              HEXAGON/unresolved.c \
+             HEXAGON/exti.c \
              HEXAGON/target/HEXAGONV66/hexagon_main.c
 
-#              drivers/accgyro/accgyro_mpu.c \
 
 #             drivers/bus_i2c_timing.c \
 #             drivers/dshot_bitbang_decode.c \

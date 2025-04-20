@@ -35,7 +35,7 @@ char _Min_Stack_Size;
 // serialPinConfig_t serialPinConfig_System;
 // serialPinConfig_t serialPinConfig_Copy;
 
-spiPinConfig_t spiPinConfig_SystemArray[0];
+// spiPinConfig_t spiPinConfig_SystemArray[0];
 
 const mcuTypeInfo_t *getMcuTypeInfo(void)
 {
@@ -227,12 +227,12 @@ void unusedPinsInit(void)
     printf("unusedPinsInit\n");
 }
 
-uint8_t mpuGyroReadRegister(const extDevice_t *dev, uint8_t reg)
-{
-	(void) dev;
-	(void) reg;
-	return 0;
-}
+// uint8_t mpuGyroReadRegister(const extDevice_t *dev, uint8_t reg)
+// {
+// 	(void) dev;
+// 	(void) reg;
+// 	return 0;
+// }
 
 void IOConfigGPIO(IO_t io, ioConfig_t cfg)
 {
@@ -271,10 +271,6 @@ IO_t IOGetByTag(ioTag_t tag)
 {
     UNUSED(tag);
     return NULL;
-}
-
-void EXTIInit(void)
-{
 }
 
 #include "drivers/motor_impl.h"
