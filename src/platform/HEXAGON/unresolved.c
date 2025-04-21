@@ -24,18 +24,8 @@ void *dmaDescriptors;
 
 uint32_t SystemCoreClock;
 
-const pgRegistry_t __pg_registry_end[1];
-const pgRegistry_t __pg_registry_start[1];
-const uint8_t __pg_resetdata_start[1];
-const uint8_t __pg_resetdata_end[1];
-
 char _estack;
 char _Min_Stack_Size;
-
-// serialPinConfig_t serialPinConfig_System;
-// serialPinConfig_t serialPinConfig_Copy;
-
-// spiPinConfig_t spiPinConfig_SystemArray[0];
 
 const mcuTypeInfo_t *getMcuTypeInfo(void)
 {

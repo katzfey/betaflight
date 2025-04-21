@@ -89,6 +89,9 @@ extern size_t strnlen(const char s[], size_t maxlen);
 
 #define USE_VIRTUAL_LED
 
+#undef USE_MULTI_GYRO
+#define GYRO_1_SPI_INSTANCE SPI1
+
 #define USE_ACC
 #define USE_ACC_SPI_ICM42688P
 

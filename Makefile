@@ -350,6 +350,7 @@ LD_FLAGS += -Bsymbolic
 LD_FLAGS += $(TOOLS_DIR)/../target/hexagon/lib/v66/G0/pic/libgcc.a
 LD_FLAGS += --wrap=malloc --wrap=calloc --wrap=free --wrap=realloc --wrap=printf
 LD_FLAGS += --wrap=strdup --wrap=__stack_chk_fail -lc
+LD_FLAGS += -T$(LINKER_DIR)/hexagon.ld
 endif
 
 ###############################################################################

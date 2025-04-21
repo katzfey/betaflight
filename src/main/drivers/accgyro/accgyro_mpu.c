@@ -424,10 +424,14 @@ void mpuPreInit(const struct gyroDeviceConfig_s *config)
 #endif
 }
 
+#include <stdio.h>
+
 bool mpuDetect(gyroDev_t *gyro, const gyroDeviceConfig_t *config)
 {
     static busDevice_t bus;
     gyro->dev.bus = &bus;
+
+	printf("In mpuDetect. %p %p %d", gyro, config, config->busType);
 
     // MPU datasheet specifies 30ms.
     delay(35);
