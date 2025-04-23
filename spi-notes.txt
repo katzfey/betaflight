@@ -10,6 +10,7 @@ Gyro / IMU / SPI notes
 - Within that busDevice_t, how does busType_u.spi.instance get initialized? It is a SPI_TypeDef* (See target.h)
 	Answer: It's set by a call to spiInstanceByDevice(0) which sets it to spiDevice[device].dev. spiDevice is an array in main/drivers/bus_spi.c
 - How does spiDevice[device].dev get initialized?
+	Answer: I had to set it in bus_spi_hexagon.c!!!
 
 2. Call tree for initialization
 ***************************
