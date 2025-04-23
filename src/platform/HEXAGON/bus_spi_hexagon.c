@@ -18,6 +18,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -35,24 +36,31 @@
 #include "drivers/rcc.h"
 #include "pg/bus_spi.h"
 
+SPI_TypeDef hexagon_spi_bus;
+
 void spiInitDevice(SPIDevice device)
 {
-	(void) device;
+	printf("In spiInitDevice: %d", device);
+
+	spiDevice[device].dev = &hexagon_spi_bus;
 }
 
 // DMA transfer setup and start
 void spiSequenceStart(const extDevice_t *dev)
 {
+	printf("In spiSequenceStart");
 	(void) dev;
 }
 
 void spiPinConfigure(const spiPinConfig_t *pConfig)
 {
+	printf("In spiPinConfigure");
 	(void) pConfig;
 }
 
 uint16_t spiCalculateDivider(uint32_t freq)
 {
+	printf("In spiCalculateDivider");
 	(void) freq;
 	return 1;
 }

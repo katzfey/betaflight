@@ -35,6 +35,10 @@
 #define UART_TRAIT_AF_PORT 1
 #define UARTHARDWARE_MAX_PINS 4
 
+#define DEFIO_GPIOID__A 0
+#define DEFIO_TAG__PA4 DEFIO_TAG_MAKE(DEFIO_GPIOID__A, 4)
+#define GYRO_1_CS_PIN PA4
+
 #define SIMULATOR_MULTITHREAD
 
 #define SYSTEM_HSE_MHZ 0
@@ -246,7 +250,9 @@ typedef struct
     void* test;
 } SPI_TypeDef;
 
-#define SPI1 ((SPI_TypeDef *) 0x5000)
+extern SPI_TypeDef hexagon_spi_bus;
+
+#define SPI1 ((SPI_TypeDef *) &hexagon_spi_bus)
 
 #define __set_BASEPRI(VALUE) ((void) VALUE)
 #define __get_BASEPRI(VALUE) (0)

@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "platform.h"
 
@@ -379,9 +380,13 @@ static gyroSpiDetectFn_t gyroSpiDetectFnTable[] = {
 
 static bool detectSPISensorsAndUpdateDetectionResult(gyroDev_t *gyro, const gyroDeviceConfig_t *config)
 {
+	printf("In detectSPISensorsAndUpdateDetectionResult. %p, %u, %p, %d", config, config->csnTag, &gyro->dev, config->spiBus);
+
     if (!config->csnTag || !spiSetBusInstance(&gyro->dev, config->spiBus)) {
         return false;
     }
+
+	printf("Still in detectSPISensorsAndUpdateDetectionResult");
 
     gyro->dev.busType_u.spi.csnPin = IOGetByTag(config->csnTag);
 
@@ -401,10 +406,13 @@ static bool detectSPISensorsAndUpdateDetectionResult(gyroDev_t *gyro, const gyro
     // May need a bitmap of hardware to detection function to do it right?
 
     for (size_t index = 0 ; gyroSpiDetectFnTable[index] ; index++) {
+		printf("Checking bus device %u", index);
+
         uint8_t sensor = (gyroSpiDetectFnTable[index])(&gyro->dev);
         if (sensor != MPU_NONE) {
             gyro->mpuDetectionResult.sensor = sensor;
             busDeviceRegister(&gyro->dev);
+			printf("bus device registered");
             return true;
         }
     }
@@ -424,14 +432,12 @@ void mpuPreInit(const struct gyroDeviceConfig_s *config)
 #endif
 }
 
-#include <stdio.h>
-
 bool mpuDetect(gyroDev_t *gyro, const gyroDeviceConfig_t *config)
 {
     static busDevice_t bus;
     gyro->dev.bus = &bus;
 
-	printf("In mpuDetect. %p %p %d", gyro, config, config->busType);
+	printf("In mpuDetect. %p %p %d %u", gyro, config, config->busType, config->csnTag);
 
     // MPU datasheet specifies 30ms.
     delay(35);
