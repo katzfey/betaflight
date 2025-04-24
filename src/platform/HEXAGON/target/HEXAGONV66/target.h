@@ -27,6 +27,9 @@
 
 #include "common/utils.h"
 
+#include "/opt/hexagon-sdk/4.1.0.4-lite/rtos/qurt/computev66/include/qurt/qurt_timer.h"
+
+
 #define USE_I2C_OLED_DISPLAY
 
 #define TARGET_BOARD_IDENTIFIER "HEXAGON"
@@ -247,7 +250,7 @@ void DMA_ClearFlag(uint32_t);
 
 typedef struct
 {
-    void* test;
+    int fd;
 } SPI_TypeDef;
 
 extern SPI_TypeDef hexagon_spi_bus;
@@ -312,7 +315,7 @@ typedef struct {
 uint64_t nanos64_real(void);
 uint64_t micros64_real(void);
 uint64_t millis64_real(void);
-void delayMicroseconds_real(uint32_t us);
+void delay(uint32_t us);
 uint64_t micros64(void);
 uint64_t millis64(void);
 

@@ -38,18 +38,60 @@
 
 SPI_TypeDef hexagon_spi_bus;
 
+int sl_client_config_spi_bus(void);
+int sl_client_spi_transfer(int fd, const uint8_t *send, uint8_t *recv, const unsigned len);
+
 void spiInitDevice(SPIDevice device)
 {
 	printf("In spiInitDevice: %d", device);
 
 	spiDevice[device].dev = &hexagon_spi_bus;
+
+	hexagon_spi_bus.fd = sl_client_config_spi_bus();
 }
 
 // DMA transfer setup and start
 void spiSequenceStart(const extDevice_t *dev)
 {
 	printf("In spiSequenceStart");
-	(void) dev;
+	busDevice_t *bus = dev->bus;
+	int spi_fd = bus->busType_u.spi.instance->fd;
+	volatile struct busSegment_s *volatile curSegment = bus->curSegment;
+
+	if (curSegment[0].len != 1) {
+		printf("Register address is not length 1");
+		return;
+	}
+
+	if (curSegment[1].len != 1) {
+		printf("Data is not length 1");
+		return;
+	}
+
+	// TODO: Add more checks
+
+	uint8_t send[2];
+	uint8_t recv[2];
+	unsigned len = 2;
+	bool is_read = false;
+
+	// Send[0] has register address
+	send[0] = *curSegment[0].u.buffers.txData;
+	if (curSegment[1].u.buffers.txData) {
+		recv[1] = *curSegment[1].u.buffers.txData;
+		printf("Writing 0x%0.2x to register 0x%0.2x", recv[1], send[0]);
+	} else if (curSegment[1].u.buffers.rxData) {
+		is_read = true;
+	}
+
+	sl_client_spi_transfer(spi_fd, &send[0], &recv[0], len);
+
+	if (is_read) {
+		curSegment[1].u.buffers.rxData[0] = recv[1];
+		printf("Read 0x%0.2x from register 0x%0.2x", recv[1], (send[0] & 0x7F));
+	}
+
+	dev->bus->curSegment = (busSegment_t *)BUS_SPI_FREE;
 }
 
 void spiPinConfigure(const spiPinConfig_t *pConfig)

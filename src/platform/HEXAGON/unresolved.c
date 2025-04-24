@@ -36,9 +36,16 @@ const mcuTypeInfo_t *getMcuTypeInfo(void)
 // This is Posix but not in Qurt?
 int nanosleep(const struct timespec *duration, struct timespec *_Nullable rem)
 {
-	(void) duration;
 	(void) rem;
-	return -1;
+
+	if ((duration->tv_nsec < 1000) && (duration->tv_sec == 0)) {
+		// Minimum sleep is 1uS
+		qurt_timer_sleep(1);
+	} else {
+		qurt_timer_sleep((duration->tv_sec * 1000000) + (duration->tv_nsec / 1000));
+	}
+
+	return 0;
 }
 
 // Why isn't this in Qurt?
