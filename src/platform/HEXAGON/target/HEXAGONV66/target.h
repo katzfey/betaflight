@@ -42,6 +42,10 @@
 #define DEFIO_TAG__PA4 DEFIO_TAG_MAKE(DEFIO_GPIOID__A, 4)
 #define GYRO_1_CS_PIN PA4
 
+#define DEFIO_GPIOID__C 2
+#define DEFIO_TAG__PC4 DEFIO_TAG_MAKE(DEFIO_GPIOID__C, 4)
+#define GYRO_1_EXTI_PIN PC4
+
 #define SIMULATOR_MULTITHREAD
 
 #define SYSTEM_HSE_MHZ 0
@@ -315,7 +319,9 @@ typedef struct {
 uint64_t nanos64_real(void);
 uint64_t micros64_real(void);
 uint64_t millis64_real(void);
-void delay(uint32_t us);
+void delayMicroseconds(uint32_t us);
+void delayMicroseconds_real(uint32_t us);
+void delay(uint32_t ms);
 uint64_t micros64(void);
 uint64_t millis64(void);
 

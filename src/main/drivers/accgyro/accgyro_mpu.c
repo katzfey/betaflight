@@ -135,6 +135,8 @@ busStatus_e mpuIntCallback(uint32_t arg)
 
 static void mpuIntExtiHandler(extiCallbackRec_t *cb)
 {
+	// printf("In mpuIntExtiHandler");
+
     gyroDev_t *gyro = container_of(cb, gyroDev_t, exti);
 
     // Ideally we'd use a timer to capture such information, but unfortunately the port used for EXTI interrupt does
@@ -163,9 +165,14 @@ static void mpuIntExtiHandler(extiCallbackRec_t *cb)
 
 static void mpuIntExtiInit(gyroDev_t *gyro)
 {
+	printf("*****************");
+	printf("In mpuIntExtiInit");
+
     if (gyro->mpuIntExtiTag == IO_TAG_NONE) {
         return;
     }
+
+	printf("*****************");
 
     const IO_t mpuIntIO = IOGetByTag(gyro->mpuIntExtiTag);
 
@@ -262,10 +269,13 @@ bool mpuAccReadSPI(accDev_t *acc)
 
 bool mpuGyroReadSPI(gyroDev_t *gyro)
 {
+	// printf("In mpuGyroReadSPI");
     int16_t *gyroData = (int16_t *)gyro->dev.rxBuf;
     switch (gyro->gyroModeSPI) {
     case GYRO_EXTI_INIT:
     {
+		// printf("In mpuGyroReadSPI GYRO_EXTI_INIT");
+
         // Initialise the tx buffer to all 0xff
         memset(gyro->dev.txBuf, 0xff, 16);
 
@@ -289,6 +299,7 @@ bool mpuGyroReadSPI(gyroDev_t *gyro)
             {
                 // Interrupts are present, but no DMA
                 gyro->gyroModeSPI = GYRO_EXTI_INT;
+				// printf("In mpuGyroReadSPI setting GYRO_EXTI_INT");
             }
         } else {
             gyro->gyroModeSPI = GYRO_EXTI_NO_INT;
@@ -299,6 +310,8 @@ bool mpuGyroReadSPI(gyroDev_t *gyro)
     case GYRO_EXTI_INT:
     case GYRO_EXTI_NO_INT:
     {
+		// printf("In mpuGyroReadSPI GYRO_EXTI_INT / GYRO_EXTI_NO_INT");
+
         gyro->dev.txBuf[0] = gyro->gyroDataReg | 0x80;
 
         busSegment_t segments[] = {
@@ -316,6 +329,9 @@ bool mpuGyroReadSPI(gyroDev_t *gyro)
         gyro->gyroADCRaw[X] = __builtin_bswap16(gyroData[1]);
         gyro->gyroADCRaw[Y] = __builtin_bswap16(gyroData[2]);
         gyro->gyroADCRaw[Z] = __builtin_bswap16(gyroData[3]);
+
+		// printf("In mpuGyroReadSPI Data: %d %d %d", gyro->gyroADCRaw[X], gyro->gyroADCRaw[Y], gyro->gyroADCRaw[Z]);
+
         break;
     }
 
@@ -380,13 +396,9 @@ static gyroSpiDetectFn_t gyroSpiDetectFnTable[] = {
 
 static bool detectSPISensorsAndUpdateDetectionResult(gyroDev_t *gyro, const gyroDeviceConfig_t *config)
 {
-	printf("In detectSPISensorsAndUpdateDetectionResult. %p, %u, %p, %d", config, config->csnTag, &gyro->dev, config->spiBus);
-
     if (!config->csnTag || !spiSetBusInstance(&gyro->dev, config->spiBus)) {
         return false;
     }
-
-	printf("Still in detectSPISensorsAndUpdateDetectionResult");
 
     gyro->dev.busType_u.spi.csnPin = IOGetByTag(config->csnTag);
 
@@ -406,8 +418,6 @@ static bool detectSPISensorsAndUpdateDetectionResult(gyroDev_t *gyro, const gyro
     // May need a bitmap of hardware to detection function to do it right?
 
     for (size_t index = 0 ; gyroSpiDetectFnTable[index] ; index++) {
-		printf("Checking bus device %u", index);
-
         uint8_t sensor = (gyroSpiDetectFnTable[index])(&gyro->dev);
         if (sensor != MPU_NONE) {
             gyro->mpuDetectionResult.sensor = sensor;

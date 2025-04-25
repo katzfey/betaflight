@@ -52,11 +52,8 @@ void FAST_CODE run(void)
     while (true) {
 		// printf("Calling scheduler");
         scheduler();
-#ifdef SIMULATOR_BUILD
+#if defined(SIMULATOR_BUILD) || defined(HEXAGON)
         delayMicroseconds_real(50); // max rate 20kHz
-#endif
-#ifdef HEXAGON
-        delay(50);
 #endif
     }
 }

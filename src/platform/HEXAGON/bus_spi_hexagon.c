@@ -41,6 +41,8 @@ SPI_TypeDef hexagon_spi_bus;
 int sl_client_config_spi_bus(void);
 int sl_client_spi_transfer(int fd, const uint8_t *send, uint8_t *recv, const unsigned len);
 
+
+
 void spiInitDevice(SPIDevice device)
 {
 	printf("In spiInitDevice: %d", device);
@@ -79,43 +81,58 @@ void spiSequenceStart(const extDevice_t *dev)
 		return;
 	}
 
+	bool single_segment = false;
+
 	if (curSegment[0].negateCS == true) {
-		printf("**** Only a single record");
-		return;
+		if (!curSegment[0].u.buffers.txData || !curSegment[0].u.buffers.rxData) {
+			printf("**** Only a single record but a buffer missing");
+			return;
+		} else {
+			single_segment = true;
+		}
 	}
 
-	if (curSegment[0].len != 1) {
+	if (!single_segment && curSegment[0].len != 1) {
 		printf("**** Register address is not length 1");
 		return;
 	}
 
-	if (curSegment[1].negateCS != true) {
-		printf("**** more than 2 records");
+	if (!single_segment && curSegment[1].negateCS != true) {
+		printf("**** More than 2 records");
 		return;
 	}
 
-	if (curSegment[1].len != 1) {
-		printf("**** Data is not length 1");
+	int length = 0;
+	if (single_segment) length = curSegment[0].len;
+	else                length = curSegment[1].len;
+
+	if (length > 12) {
+		printf("**** Max length is 12. %d", length);
 		return;
 	}
-
 	// TODO: Add more checks
 
 	uint8_t send[2];
-	uint8_t recv[2];
-	unsigned len = 2;
-	bool is_read = false;
+	uint8_t recv[16];
+	unsigned len = 1 + length;
 
 	// Send[0] has register address
 	send[0] = *curSegment[0].u.buffers.txData;
 
-	// A write transaction will have a non-NULL txData buffer
-	// and a read transaction will have a non-NULL rxData buffer
-	if (curSegment[1].u.buffers.txData) {
+	// If high bit on register address is set then it is a read
+	bool is_read = (*curSegment[0].u.buffers.txData) & 0x80;
+
+	if (!is_read) {
+		if (length != 1) {
+			printf("**** Only writes of length 1 are supported. %d", length);
+			return;
+		}
+		if (single_segment) {
+			printf("**** Single segment writes not supported");
+			return;
+		}
 		recv[1] = *curSegment[1].u.buffers.txData;
 		// printf("Writing 0x%0.2x to register 0x%0.2x", recv[1], send[0]);
-	} else if (curSegment[1].u.buffers.rxData) {
-		is_read = true;
 	}
 
 	int spi_fd = bus->busType_u.spi.instance->fd;
@@ -123,8 +140,9 @@ void spiSequenceStart(const extDevice_t *dev)
 	sl_client_spi_transfer(spi_fd, &send[0], &recv[0], len);
 
 	if (is_read) {
-		curSegment[1].u.buffers.rxData[0] = recv[1];
-		// printf("Read 0x%0.2x from register 0x%0.2x", recv[1], (send[0] & 0x7F));
+		uint8_t *destination = curSegment[1].u.buffers.rxData;
+		if (single_segment) destination = curSegment[0].u.buffers.rxData;
+		memcpy(destination, &recv[1], length);
 	}
 
 	// This marks the transaction as completed

@@ -69,6 +69,10 @@ void delayMicroseconds(uint32_t us)
     microsleep(us);
 }
 
+void delayMicroseconds_real(uint32_t us) {
+    delayMicroseconds(us);
+}
+
 void delay(uint32_t ms)
 {
     uint64_t start = millis64();
