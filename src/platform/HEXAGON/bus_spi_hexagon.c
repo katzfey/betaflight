@@ -114,7 +114,6 @@ void spiSequenceStart(const extDevice_t *dev)
 
 	uint8_t send[2];
 	uint8_t recv[16];
-	unsigned len = 1 + length;
 
 	// Send[0] has register address
 	send[0] = *curSegment[0].u.buffers.txData;
@@ -137,12 +136,24 @@ void spiSequenceStart(const extDevice_t *dev)
 
 	int spi_fd = bus->busType_u.spi.instance->fd;
 
+	int len = length;
+	if (!single_segment) len = len + 1;
+
 	sl_client_spi_transfer(spi_fd, &send[0], &recv[0], len);
+
+	// if (is_read && length == 7) {
+	// 	printf("0x%0.2x 0x%0.2x 0x%0.2x 0x%0.2x 0x%0.2x 0x%0.2x 0x%0.2x 0x%0.2x 0x%0.2x",
+	// 		   (send[0] & 0x7f), recv[0], recv[1], recv[2], recv[3], recv[4], recv[5], recv[6], recv[7]);
+	// }
 
 	if (is_read) {
 		uint8_t *destination = curSegment[1].u.buffers.rxData;
-		if (single_segment) destination = curSegment[0].u.buffers.rxData;
-		memcpy(destination, &recv[1], length);
+		uint8_t *source = &recv[1];
+		if (single_segment) {
+			destination = curSegment[0].u.buffers.rxData;
+			source = recv;
+		}
+		memcpy(destination, source, length);
 	}
 
 	// This marks the transaction as completed

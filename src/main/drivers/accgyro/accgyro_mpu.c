@@ -256,6 +256,9 @@ bool mpuAccReadSPI(accDev_t *acc)
         acc->ADCRaw[X] = __builtin_bswap16(accData[1]);
         acc->ADCRaw[Y] = __builtin_bswap16(accData[2]);
         acc->ADCRaw[Z] = __builtin_bswap16(accData[3]);
+
+		// printf("Accel Data: 0x%0.2x %d %d %d", acc->gyro->accDataReg, acc->ADCRaw[X], acc->ADCRaw[Y], acc->ADCRaw[Z]);
+
         break;
     }
 
