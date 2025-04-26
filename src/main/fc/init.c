@@ -549,7 +549,7 @@ void init(void)
 #endif
 
 #if defined(USE_UART) && !defined(SIMULATOR_BUILD)
-    uartPinConfigure(serialPinConfig());
+    // uartPinConfigure(serialPinConfig());
 #endif
 
     serialInit(featureIsEnabled(FEATURE_SOFTSERIAL));

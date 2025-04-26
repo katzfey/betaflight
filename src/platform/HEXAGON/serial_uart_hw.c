@@ -23,6 +23,7 @@
  * Common  UART hardware functions
  */
 
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -44,41 +45,61 @@
 
 #include "pg/serial_uart.h"
 
-// TODO: split this function into mcu-specific UART files ?
-// static void enableRxIrq(const uartHardware_t *hardware)
-// {
-// #if defined(USE_HAL_DRIVER)
-//         HAL_NVIC_SetPriority(hardware->irqn, NVIC_PRIORITY_BASE(hardware->rxPriority), NVIC_PRIORITY_SUB(hardware->rxPriority));
-//         HAL_NVIC_EnableIRQ(hardware->irqn);
-// #elif defined(STM32F4)
-//         NVIC_InitTypeDef NVIC_InitStructure;
-//         NVIC_InitStructure.NVIC_IRQChannel = hardware->irqn;
-//         NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = NVIC_PRIORITY_BASE(hardware->rxPriority);
-//         NVIC_InitStructure.NVIC_IRQChannelSubPriority = NVIC_PRIORITY_SUB(hardware->rxPriority);
-//         NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//         NVIC_Init(&NVIC_InitStructure);
-// #elif defined(AT32F4)
-//         nvic_irq_enable(hardware->irqn, NVIC_PRIORITY_BASE(hardware->rxPriority), NVIC_PRIORITY_SUB(hardware->rxPriority));
-// #elif defined(APM32F4)
-//         DAL_NVIC_SetPriority(hardware->irqn, NVIC_PRIORITY_BASE(hardware->rxPriority), NVIC_PRIORITY_SUB(hardware->rxPriority));
-//         DAL_NVIC_EnableIRQ(hardware->irqn);
-// #else
-// # error "Unhandled MCU type"
-// #endif
-// }
+extern int sl_client_config_uart(uint8_t port_number, uint32_t speed);
+
+USART_TypeDef hexagon_uart[3];
+
+const uartHardware_t uartHardware[UARTDEV_COUNT] = {
+    {
+        .identifier = SERIAL_PORT_USART1,
+        .reg = USART1,
+        .txBuffer = uart1TxBuffer,
+        .rxBuffer = uart1RxBuffer,
+        .txBufferSize = sizeof(uart1TxBuffer),
+        .rxBufferSize = sizeof(uart1RxBuffer),
+    },
+    {
+        .identifier = SERIAL_PORT_USART2,
+        .reg = USART2,
+        .txBuffer = uart1TxBuffer,
+        .rxBuffer = uart1RxBuffer,
+        .txBufferSize = sizeof(uart1TxBuffer),
+        .rxBufferSize = sizeof(uart1RxBuffer),
+    },
+    {
+        .identifier = SERIAL_PORT_USART3,
+        .reg = USART3,
+        .txBuffer = uart1TxBuffer,
+        .rxBuffer = uart1RxBuffer,
+        .txBufferSize = sizeof(uart1TxBuffer),
+        .rxBufferSize = sizeof(uart1RxBuffer),
+	}
+};
 
 uartPort_t *serialUART(uartDevice_t *uartdev, uint32_t baudRate, portMode_e mode, portOptions_e options)
 {
-	(void)uartdev;
-	(void)baudRate;
 	(void)mode;
 	(void)options;
-	return NULL;
+
+    uartPort_t *s = &uartdev->port;
+
+	// TODO: Use correct port
+	int fd = sl_client_config_uart(2, baudRate);
+
+	printf("====== In serialUART. baudRate %lu", baudRate);
+
+	// TODO: Use correct hardware record index
+    uartHardware[0].reg->fd = fd;
+
+    s->USARTx = uartHardware[0].reg;
+
+	return s;
 }
 
 void uartEnableTxInterrupt(uartPort_t *uartPort)
 {
 	(void) uartPort;
+	printf("====== In uartEnableTxInterrupt");
 }
 
 #endif /* USE_UART */

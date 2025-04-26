@@ -30,7 +30,7 @@
 
 #define SPIDEV_COUNT        1
 
-#define SERIAL_TRAIT_PIN_CONFIG 1
+#define SERIAL_TRAIT_PIN_CONFIG 0
 
 #define NVIC_PriorityGroup_2 0x500
 

@@ -101,6 +101,11 @@ uint32_t micros(void)
     return micros64() & 0xFFFFFFFF;
 }
 
+uint32_t microsISR(void)
+{
+	return micros();
+}
+
 uint64_t millis64(void)
 {
     struct timespec ts;

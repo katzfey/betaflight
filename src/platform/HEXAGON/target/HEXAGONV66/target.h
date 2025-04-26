@@ -126,15 +126,19 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #define USE_UART1
 #define USE_UART2
 #define USE_UART3
-#define USE_UART4
-#define USE_UART5
-#define USE_UART6
-#define USE_UART7
-#define USE_UART8
+#undef USE_UART4
+#undef USE_UART5
+#undef USE_UART6
+#undef USE_UART7
+#undef USE_UART8
+
+#define USE_SERIALRX
+#define USE_SERIALRX_CRSF
+
 
 #undef USE_DMA
 
-#define DEFAULT_RX_FEATURE      FEATURE_RX_MSP
+#define DEFAULT_RX_FEATURE      FEATURE_RX_SERIAL
 #define DEFAULT_FEATURES        (FEATURE_GPS | FEATURE_TELEMETRY)
 
 #define USE_PARAMETER_GROUPS
@@ -153,8 +157,6 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #undef USE_OSD
 #undef USE_RX_PPM
 #undef USE_RX_PWM
-#undef USE_SERIALRX
-#undef USE_SERIALRX_CRSF
 #undef USE_SERIALRX_GHST
 #undef USE_SERIALRX_IBUS
 #undef USE_SERIALRX_SBUS
@@ -267,22 +269,29 @@ extern SPI_TypeDef hexagon_spi_bus;
 
 typedef struct
 {
-    void* test;
+    int fd;
+	uint8_t port_number;
+	uint32_t speed;
 } USART_TypeDef;
 
-#define USART1 ((USART_TypeDef *)0x0001)
-#define USART2 ((USART_TypeDef *)0x0002)
-#define USART3 ((USART_TypeDef *)0x0003)
-#define USART4 ((USART_TypeDef *)0x0004)
-#define USART5 ((USART_TypeDef *)0x0005)
-#define USART6 ((USART_TypeDef *)0x0006)
-#define USART7 ((USART_TypeDef *)0x0007)
-#define USART8 ((USART_TypeDef *)0x0008)
+extern USART_TypeDef hexagon_uart[3];
 
-#define UART4 ((USART_TypeDef *)0x0004)
-#define UART5 ((USART_TypeDef *)0x0005)
-#define UART7 ((USART_TypeDef *)0x0007)
-#define UART8 ((USART_TypeDef *)0x0008)
+
+#define USART1 ((USART_TypeDef *) &hexagon_uart[0])
+#define USART2 ((USART_TypeDef *) &hexagon_uart[1])
+#define USART3 ((USART_TypeDef *) &hexagon_uart[2])
+#define USART4 ((USART_TypeDef *) NULL)
+#define USART5 ((USART_TypeDef *) NULL)
+#define USART6 ((USART_TypeDef *) NULL)
+#define USART7 ((USART_TypeDef *) NULL)
+#define USART8 ((USART_TypeDef *) NULL)
+
+#define UART4 ((USART_TypeDef *) NULL)
+#define UART5 ((USART_TypeDef *) NULL)
+#define UART7 ((USART_TypeDef *) NULL)
+#define UART8 ((USART_TypeDef *) NULL)
+
+#define SERIALRX_UART SERIAL_PORT_USART1
 
 #define SIMULATOR_MAX_RC_CHANNELS   16
 #define SIMULATOR_MAX_PWM_CHANNELS  16

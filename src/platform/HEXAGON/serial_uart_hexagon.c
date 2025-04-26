@@ -26,6 +26,7 @@
  * Hamasaki/Timecop - Initial baseflight code
 */
 
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -43,17 +44,16 @@
 #include "drivers/serial_uart.h"
 #include "drivers/serial_uart_impl.h"
 
-const uartHardware_t uartHardware[UARTDEV_COUNT];
-
 // XXX uartReconfigure does not handle resource management properly.
 
 void uartReconfigure(uartPort_t *uartPort)
 {
-	(void) uartPort;
+	printf("====== In uartReconfigure. baud rate: %lu", uartPort->port.baudRate);
 }
 
 void uartIrqHandler(uartPort_t *s)
 {
 	(void) s;
+	printf("====== In uartIrqHandler");
 }
 
