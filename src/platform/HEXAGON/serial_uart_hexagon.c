@@ -44,11 +44,14 @@
 #include "drivers/serial_uart.h"
 #include "drivers/serial_uart_impl.h"
 
-// XXX uartReconfigure does not handle resource management properly.
+extern int sl_client_register_uart_callback(int fd, serialReceiveCallbackPtr cb, void *arg);
 
 void uartReconfigure(uartPort_t *uartPort)
 {
-	printf("====== In uartReconfigure. baud rate: %lu", uartPort->port.baudRate);
+	printf("====== In uartReconfigure");
+
+	// TODO: Put in real saved fd
+    (void) sl_client_register_uart_callback(0, uartPort->port.rxCallback, uartPort->port.rxCallbackData);
 }
 
 void uartIrqHandler(uartPort_t *s)
