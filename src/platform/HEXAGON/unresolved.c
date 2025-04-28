@@ -279,53 +279,6 @@ IO_t IOGetByTag(ioTag_t tag)
     return NULL;
 }
 
-#include "drivers/motor_impl.h"
-#include "pg/motor.h"
-
-bool motorEn(void) { return true; }
-
-// static const motorVTable_t vTable = {
-//     .postInit = NULL,
-//     .convertExternalToMotor = NULL,
-//     .convertMotorToExternal = NULL,
-//     .enable = motorEn,
-//     .disable = NULL,
-//     .isMotorEnabled = NULL,
-//     .decodeTelemetry = NULL,
-//     .write = NULL,
-//     .writeInt = NULL,
-//     .updateComplete = NULL,
-//     .shutdown = NULL,
-//     .requestTelemetry = NULL,
-//     .isMotorIdle = NULL,
-//     .getMotorIO = NULL,
-// };
-
-bool motorPwmDevInit(motorDevice_t *device, const motorDevConfig_t *motorConfig, uint16_t _idlePulse)
-{
-	(void) motorConfig;
-	(void) _idlePulse;
-
-    if (!device) {
-        return false;
-    }
-
-    motorNullDevInit(device);
-
-    // device->vTable = &vTable;
-    // const uint8_t motorCount = device->count;
-    printf("Initialized motor count %d\n", device->count);
-    // pwmRawPkt.motorCount = motorCount;
-	
-    // idlePulse = _idlePulse;
-	
-    // for (int motorIndex = 0; motorIndex < MAX_SUPPORTED_MOTORS && motorIndex < motorCount; motorIndex++) {
-    //     pwmMotors[motorIndex].enabled = true;
-    // }
-
-    return true;
-}
-
 // system
 void systemInit(void)
 {

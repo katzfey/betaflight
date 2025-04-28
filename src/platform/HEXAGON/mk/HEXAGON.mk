@@ -136,6 +136,7 @@ MCU_COMMON_SRC = \
              HEXAGON/audio_hexagon.c \
              HEXAGON/bus_spi_hexagon.c \
              HEXAGON/serial_uart_hexagon.c \
+             HEXAGON/motor_hexagon.c \
              drivers/accgyro/accgyro_mpu.c \
              drivers/bus_spi_config.c \
              HEXAGON/unresolved.c \
