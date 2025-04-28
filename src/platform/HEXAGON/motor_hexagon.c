@@ -7,6 +7,7 @@
 #define HEXAGON_MAX_MOTORS 4
 
 static bool motorEnabled[HEXAGON_MAX_MOTORS];
+static float motorSpeed[HEXAGON_MAX_MOTORS];
 
 static bool hexagonMotorEnabled(unsigned index) {
 	printf("In hexagonMotorEnabled, index: %u", index);
@@ -29,12 +30,21 @@ void hexagonMotorDisable(void) {
 	}
 }
 
+static uint32_t motorDebug;
+
 void hexagonMotorWrite(uint8_t index, float value) {
-	printf("In motorWrite index: %u, value: %f", index, (double) value);
+	if (index < HEXAGON_MAX_MOTORS)	{
+		motorSpeed[index] = value;
+	}
 }
 
 void hexagonMotorUpdateComplete(void) {
-	printf("In motorUpdateComplete");
+	motorDebug++;
+	if (motorDebug == 10000) {
+		printf("Motor values: %f, %f, %f, %f", (double) motorSpeed[0],
+				(double) motorSpeed[1], (double) motorSpeed[2], (double) motorSpeed[3]);
+		motorDebug = 0;
+	}
 }
 
 static const motorVTable_t vTable = {
