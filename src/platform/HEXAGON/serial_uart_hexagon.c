@@ -45,18 +45,99 @@
 #include "drivers/serial_uart_impl.h"
 
 extern int sl_client_register_uart_callback(int fd, serialReceiveCallbackPtr cb, void *arg);
+extern int sl_client_config_uart(uint8_t port_number, uint32_t speed);
+
+USART_TypeDef hexagon_uart[3];
+
+const uartHardware_t uartHardware[UARTDEV_COUNT] = {
+    {
+        .identifier = SERIAL_PORT_USART1,
+        .reg = USART1,
+        .txBuffer = uart1TxBuffer,
+        .rxBuffer = uart1RxBuffer,
+        .txBufferSize = sizeof(uart1TxBuffer),
+        .rxBufferSize = sizeof(uart1RxBuffer),
+    },
+    {
+        .identifier = SERIAL_PORT_USART2,
+        .reg = USART2,
+        .txBuffer = uart1TxBuffer,
+        .rxBuffer = uart1RxBuffer,
+        .txBufferSize = sizeof(uart1TxBuffer),
+        .rxBufferSize = sizeof(uart1RxBuffer),
+    },
+    {
+        .identifier = SERIAL_PORT_USART3,
+        .reg = USART3,
+        .txBuffer = uart1TxBuffer,
+        .rxBuffer = uart1RxBuffer,
+        .txBufferSize = sizeof(uart1TxBuffer),
+        .rxBufferSize = sizeof(uart1RxBuffer),
+	}
+};
+
+uartPort_t *serialUART(uartDevice_t *uartdev, uint32_t baudRate, portMode_e mode, portOptions_e options)
+{
+	(void)mode;
+	(void)options;
+
+    uartPort_t *uart_port = &uartdev->port;
+
+	serialPort_t serial_port = uart_port->port;
+
+	serialPortIdentifier_e port_number = serial_port.identifier;
+
+	uint8_t sl_port_number = 0;
+	int hw_index = 0;
+	switch(port_number) {
+	case SERIAL_PORT_USART1:
+		sl_port_number = 2;
+		hw_index = 0;
+		break;
+	case SERIAL_PORT_USART2:
+		sl_port_number = 6;
+		hw_index = 1;
+		break;
+	case SERIAL_PORT_USART3:
+		sl_port_number = 7;
+		hw_index = 2;
+		break;
+	default:
+		printf("ERROR: Invalid port identifier");
+		break;
+	}
+
+	int fd = sl_client_config_uart(sl_port_number, baudRate);
+
+	printf("====== In serialUART. id %u port %u baudRate %lu", port_number, sl_port_number, baudRate);
+
+    uartHardware[hw_index].reg->fd = fd;
+
+    uart_port->USARTx = uartHardware[hw_index].reg;
+
+	return uart_port;
+}
+
+void uartEnableTxInterrupt(uartPort_t *uartPort)
+{
+	int fd = uartPort->USARTx->fd;
+
+	printf("====== In uartEnableTxInterrupt, fd %d", fd);
+}
 
 void uartReconfigure(uartPort_t *uartPort)
 {
-	printf("====== In uartReconfigure");
+	int fd = uartPort->USARTx->fd;
 
-	// TODO: Put in real saved fd
-    (void) sl_client_register_uart_callback(0, uartPort->port.rxCallback, uartPort->port.rxCallbackData);
+	printf("====== In uartReconfigure, fd %d", fd);
+
+    (void) sl_client_register_uart_callback(fd, uartPort->port.rxCallback, uartPort->port.rxCallbackData);
 }
 
 void uartIrqHandler(uartPort_t *s)
 {
-	(void) s;
-	printf("====== In uartIrqHandler");
+	int fd = s->USARTx->fd;
+
+	printf("====== In uartIrqHandler, fd %d", fd);
 }
 
