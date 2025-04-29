@@ -126,7 +126,7 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #define USE_UART1
 #define USE_UART2
 #define USE_UART3
-#undef USE_UART4
+#define USE_UART4
 #undef USE_UART5
 #undef USE_UART6
 #undef USE_UART7
@@ -274,13 +274,14 @@ typedef struct
 	uint32_t speed;
 } USART_TypeDef;
 
-extern USART_TypeDef hexagon_uart[3];
+#define NUM_HEXAGON_UART 4
 
+extern USART_TypeDef hexagon_uart[NUM_HEXAGON_UART];
 
 #define USART1 ((USART_TypeDef *) &hexagon_uart[0])
 #define USART2 ((USART_TypeDef *) &hexagon_uart[1])
 #define USART3 ((USART_TypeDef *) &hexagon_uart[2])
-#define USART4 ((USART_TypeDef *) NULL)
+#define USART4 ((USART_TypeDef *) &hexagon_uart[3])
 #define USART5 ((USART_TypeDef *) NULL)
 #define USART6 ((USART_TypeDef *) NULL)
 #define USART7 ((USART_TypeDef *) NULL)
@@ -292,6 +293,7 @@ extern USART_TypeDef hexagon_uart[3];
 #define UART8 ((USART_TypeDef *) NULL)
 
 #define SERIALRX_UART SERIAL_PORT_USART1
+#define MSP_UART SERIAL_PORT_UART4
 
 #define SIMULATOR_MAX_RC_CHANNELS   16
 #define SIMULATOR_MAX_PWM_CHANNELS  16

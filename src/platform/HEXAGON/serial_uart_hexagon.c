@@ -47,7 +47,7 @@
 extern int sl_client_register_uart_callback(int fd, serialReceiveCallbackPtr cb, void *arg);
 extern int sl_client_config_uart(uint8_t port_number, uint32_t speed);
 
-USART_TypeDef hexagon_uart[3];
+USART_TypeDef hexagon_uart[NUM_HEXAGON_UART];
 
 const uartHardware_t uartHardware[UARTDEV_COUNT] = {
     {
@@ -73,7 +73,55 @@ const uartHardware_t uartHardware[UARTDEV_COUNT] = {
         .rxBuffer = uart1RxBuffer,
         .txBufferSize = sizeof(uart1TxBuffer),
         .rxBufferSize = sizeof(uart1RxBuffer),
+	},
+    {
+        .identifier = SERIAL_PORT_UART4,
+        .reg = USART4,
+        .txBuffer = uart1TxBuffer,
+        .rxBuffer = uart1RxBuffer,
+        .txBufferSize = sizeof(uart1TxBuffer),
+        .rxBufferSize = sizeof(uart1RxBuffer),
 	}
+};
+
+uint32_t hexagonSerialTotalRxWaiting(const serialPort_t *instance) {
+	(void) instance;
+	printf("In hexagonSerialTotalRxWaiting");
+	return 0;
+}
+
+uint8_t hexagonSerialRead(serialPort_t *instance) {
+	(void) instance;
+	printf("In hexagonSerialRead");
+	return 0;
+}
+
+
+static struct serialPortVTable hexagon_uart_vtable = {
+    // void (*serialWrite)(serialPort_t *instance, uint8_t ch);
+    // uint32_t (*serialTotalRxWaiting)(const serialPort_t *instance);
+    // uint32_t (*serialTotalTxFree)(const serialPort_t *instance);
+    // uint8_t (*serialRead)(serialPort_t *instance);
+    // void (*serialSetBaudRate)(serialPort_t *instance, uint32_t baudRate);
+    // bool (*isSerialTransmitBufferEmpty)(const serialPort_t *instance);
+    // void (*setMode)(serialPort_t *instance, portMode_e mode);
+    // void (*setCtrlLineStateCb)(serialPort_t *instance, void (*cb)(void *instance, uint16_t ctrlLineState), void *context);
+    // void (*setBaudRateCb)(serialPort_t *instance, void (*cb)(serialPort_t *context, uint32_t baud), serialPort_t *context);
+    // void (*writeBuf)(serialPort_t *instance, const void *data, int count);
+    // void (*beginWrite)(serialPort_t *instance);
+    // void (*endWrite)(serialPort_t *instance);
+	.serialWrite = NULL,
+	.serialTotalRxWaiting = hexagonSerialTotalRxWaiting,
+	.serialTotalTxFree = NULL,
+	.serialRead = hexagonSerialRead,
+	.serialSetBaudRate = NULL,
+	.isSerialTransmitBufferEmpty = NULL,
+	.setMode = NULL,
+	.setCtrlLineStateCb = NULL,
+	.setBaudRateCb = NULL,
+	.writeBuf = NULL,
+	.beginWrite = NULL,
+	.endWrite = NULL
 };
 
 uartPort_t *serialUART(uartDevice_t *uartdev, uint32_t baudRate, portMode_e mode, portOptions_e options)
@@ -88,7 +136,7 @@ uartPort_t *serialUART(uartDevice_t *uartdev, uint32_t baudRate, portMode_e mode
 	serialPortIdentifier_e port_number = serial_port.identifier;
 
 	uint8_t sl_port_number = 0;
-	int hw_index = 0;
+	int hw_index = -1;
 	switch(port_number) {
 	case SERIAL_PORT_USART1:
 		sl_port_number = 2;
@@ -102,18 +150,33 @@ uartPort_t *serialUART(uartDevice_t *uartdev, uint32_t baudRate, portMode_e mode
 		sl_port_number = 7;
 		hw_index = 2;
 		break;
+	case SERIAL_PORT_UART4:
+		sl_port_number = 8;
+		hw_index = 3;
+		break;
 	default:
 		printf("ERROR: Invalid port identifier");
 		break;
 	}
 
-	int fd = sl_client_config_uart(sl_port_number, baudRate);
+	if ((hw_index > -1) && (hw_index < 4)) {
+		if (hw_index == 3) {
+			printf("Configuring MSP port");
+		} else {
+			int fd = sl_client_config_uart(sl_port_number, baudRate);
 
-	printf("====== In serialUART. id %u port %u baudRate %lu", port_number, sl_port_number, baudRate);
+			printf("====== In serialUART. id %u port %u baudRate %lu", port_number, sl_port_number, baudRate);
 
-    uartHardware[hw_index].reg->fd = fd;
+		    uartHardware[hw_index].reg->fd = fd;
+		}
 
-    uart_port->USARTx = uartHardware[hw_index].reg;
+	    uart_port->USARTx = uartHardware[hw_index].reg;
+	} else {
+		printf("ERROR: Invalid port number %u", port_number);
+		return NULL;
+	}
+
+	uartdev->port.port.vTable = &hexagon_uart_vtable;
 
 	return uart_port;
 }
