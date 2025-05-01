@@ -10,7 +10,7 @@ static bool motorEnabled[HEXAGON_MAX_MOTORS];
 static float motorSpeed[HEXAGON_MAX_MOTORS];
 
 static bool hexagonMotorEnabled(unsigned index) {
-	printf("In hexagonMotorEnabled, index: %u", index);
+	// printf("In hexagonMotorEnabled, index: %u", index);
 	if (index < HEXAGON_MAX_MOTORS)	return motorEnabled[index];
 	return false;
 }
@@ -40,17 +40,34 @@ void hexagonMotorWrite(uint8_t index, float value) {
 
 void hexagonMotorUpdateComplete(void) {
 	motorDebug++;
-	if (motorDebug == 10000) {
+	// if (motorDebug == 10000) {
+	if (motorDebug == 4000) {
 		printf("Motor values: %f, %f, %f, %f", (double) motorSpeed[0],
 				(double) motorSpeed[1], (double) motorSpeed[2], (double) motorSpeed[3]);
 		motorDebug = 0;
 	}
 }
 
+float hexagonConvertExternalToMotor(uint16_t externalValue)
+{
+	float motor_range = (float) (externalValue - 1000);
+	motor_range /= 1000.0f;
+	// printf(">>>>>>>>>>>>>>> External convert from %u to %f", externalValue, (double) motor_range);
+	return motor_range;
+}
+
+
+uint16_t hexagonConvertMotorToExternal(float motorValue)
+{
+	uint16_t motor_pwm = (uint16_t) ((motorValue * 1000.0f) + 1000.0f);
+	// printf(">>>>>>>>>>>>>>> Motor convert from %f to %u", (double) motorValue, motor_pwm);
+	return motor_pwm;
+}
+
 static const motorVTable_t vTable = {
     .postInit = NULL,
-    .convertExternalToMotor = NULL,
-    .convertMotorToExternal = NULL,
+    .convertExternalToMotor = hexagonConvertExternalToMotor,
+    .convertMotorToExternal = hexagonConvertMotorToExternal,
     .enable = hexagonMotorEnable,
     .disable = hexagonMotorDisable,
     .isMotorEnabled = hexagonMotorEnabled,

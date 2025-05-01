@@ -199,7 +199,7 @@ void hexagonWriteBuf(serialPort_t *instance, const void *data, int count) {
 		break;
 	}
 
-	printf("Sending %d bytes in hexagonWriteBuf", count);
+	// printf("Sending %d bytes in hexagonWriteBuf", count);
 
 	(void) sl_client_uart_write(uartHardware[hw_index].reg->fd, (const char*) data, (const unsigned) count);
 }

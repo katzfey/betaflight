@@ -313,20 +313,6 @@ typedef struct {
     double pressure;
 } fdm_packet;
 
-typedef struct {
-    double timestamp;                               // in seconds
-    uint16_t channels[SIMULATOR_MAX_RC_CHANNELS];   // RC channels
-} rc_packet;
-
-typedef struct {
-    float motor_speed[4];   // normal: [0.0, 1.0], 3D: [-1.0, 1.0]
-} servo_packet;
-
-typedef struct {
-    uint16_t motorCount; // Count of motor in the PWM output.
-    float pwm_output_raw[SIMULATOR_MAX_PWM_CHANNELS];   // Raw PWM from 1100 to 1900
-} servo_packet_raw;
-
 uint64_t nanos64_real(void);
 uint64_t micros64_real(void);
 uint64_t millis64_real(void);
