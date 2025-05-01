@@ -98,7 +98,7 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #undef SCHEDULER_DELAY_LIMIT
 #define SCHEDULER_DELAY_LIMIT           1
 
-#define USE_VIRTUAL_LED
+// #define USE_VIRTUAL_LED
 
 #undef USE_MULTI_GYRO
 #define GYRO_1_SPI_INSTANCE SPI1

@@ -11,6 +11,7 @@
 
 #include "pg/pg.h"
 #include "drivers/serial.h"
+#include "drivers/io.h"
 #include "pg/bus_spi.h"
 #include "drivers/system.h"
 
@@ -348,4 +349,16 @@ void systemReset(void)
     // pthread_join(tcpWorker, NULL);
     // pthread_join(udpWorker, NULL);
     // exit(0);
+}
+
+// Should go in separate IO source file
+void IOWrite(IO_t io, bool hi)
+{
+	(void) io;
+	(void) hi;
+}
+
+void IOToggle(IO_t io)
+{
+	(void) io;
 }
