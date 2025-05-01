@@ -18,6 +18,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -307,6 +308,8 @@ static int mspSerialSendFrame(mspPort_t *msp, const uint8_t * hdr, int hdrLen, c
         return 0;
     }
 
+	printf("Sending MSP frame");
+
     // Transmit frame
     serialBeginWrite(msp->port);
     serialWriteBufNoFlush(msp->port, hdr, hdrLen);
@@ -535,6 +538,7 @@ void mspSerialProcess(mspEvaluateNonMspData_e evaluateNonMspData, mspProcessComm
             mspPort->pendingRequest = MSP_PENDING_NONE;
 
             const uint8_t c = serialRead(mspPort->port);
+			printf("******** Got MSP character: %u ********", c);
             if (c == '$') {
                 mspPort->portState = PORT_MSP_PACKET;
                 mspPort->packetState = MSP_HEADER_START;

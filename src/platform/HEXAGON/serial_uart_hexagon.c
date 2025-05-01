@@ -46,6 +46,10 @@
 
 extern int sl_client_register_uart_callback(int fd, serialReceiveCallbackPtr cb, void *arg);
 extern int sl_client_config_uart(uint8_t port_number, uint32_t speed);
+extern int sl_client_uart_read(int fd, char *buffer, const unsigned buffer_len);
+extern int sl_client_uart_flush_rx(int fd);
+extern int sl_client_uart_rx_available(int fd, uint32_t *data);
+extern int sl_client_uart_write(int fd, const char *data, const unsigned data_len);
 
 USART_TypeDef hexagon_uart[NUM_HEXAGON_UART];
 
@@ -85,16 +89,121 @@ const uartHardware_t uartHardware[UARTDEV_COUNT] = {
 };
 
 uint32_t hexagonSerialTotalRxWaiting(const serialPort_t *instance) {
-	(void) instance;
-	printf("In hexagonSerialTotalRxWaiting");
-	return 0;
+
+	serialPortIdentifier_e port_number = instance->identifier;
+
+	int hw_index = -1;
+
+	switch(port_number) {
+	case SERIAL_PORT_USART1:
+		hw_index = 0;
+		break;
+	case SERIAL_PORT_USART2:
+		hw_index = 1;
+		break;
+	case SERIAL_PORT_USART3:
+		hw_index = 2;
+		break;
+	case SERIAL_PORT_UART4:
+		hw_index = 3;
+		break;
+	default:
+		printf("ERROR: Invalid port identifier");
+		break;
+	}
+
+	uint32_t bytes_waiting = 0;
+
+	if ((hw_index > -1) && (hw_index < 4)) {
+		if (hw_index == 3) {
+		    // TODO for virtual port
+		} else {
+			(void) sl_client_uart_rx_available(uartHardware[hw_index].reg->fd, &bytes_waiting);
+		}
+	} else {
+		printf("ERROR: Invalid port number %u", port_number);
+	}
+
+	return (uint32_t) bytes_waiting;
 }
 
 uint8_t hexagonSerialRead(serialPort_t *instance) {
-	(void) instance;
-	printf("In hexagonSerialRead");
-	return 0;
+
+	serialPortIdentifier_e port_number = instance->identifier;
+
+	int hw_index = -1;
+
+	switch(port_number) {
+	case SERIAL_PORT_USART1:
+		hw_index = 0;
+		break;
+	case SERIAL_PORT_USART2:
+		hw_index = 1;
+		break;
+	case SERIAL_PORT_USART3:
+		hw_index = 2;
+		break;
+	case SERIAL_PORT_UART4:
+		hw_index = 3;
+		break;
+	default:
+		printf("ERROR: Invalid port identifier");
+		break;
+	}
+
+	uint8_t byte_data = 0;
+
+	if ((hw_index > -1) && (hw_index < 4)) {
+		if (hw_index == 3) {
+		    // TODO for virtual port
+		} else {
+			(void) sl_client_uart_read(uartHardware[hw_index].reg->fd, (char*) &byte_data, 1);
+		}
+	} else {
+		printf("ERROR: Invalid port number %u", port_number);
+	}
+
+	return byte_data;
 }
+
+bool hexagonIsSerialTransmitBufferEmpty(const serialPort_t *instance) {
+	(void) instance;
+	return true;
+}
+
+uint32_t hexagonSerialTotalTxFree(const serialPort_t *instance) {
+	(void) instance;
+	return 255;
+}
+
+void hexagonWriteBuf(serialPort_t *instance, const void *data, int count) {
+	serialPortIdentifier_e port_number = instance->identifier;
+
+	int hw_index = -1;
+
+	switch(port_number) {
+	case SERIAL_PORT_USART1:
+		hw_index = 0;
+		break;
+	case SERIAL_PORT_USART2:
+		hw_index = 1;
+		break;
+	case SERIAL_PORT_USART3:
+		hw_index = 2;
+		break;
+	case SERIAL_PORT_UART4:
+		hw_index = 3;
+		break;
+	default:
+		printf("ERROR: Invalid port identifier");
+		break;
+	}
+
+	printf("Sending %d bytes in hexagonWriteBuf", count);
+
+	(void) sl_client_uart_write(uartHardware[hw_index].reg->fd, (const char*) data, (const unsigned) count);
+}
+
 
 
 static struct serialPortVTable hexagon_uart_vtable = {
@@ -112,14 +221,14 @@ static struct serialPortVTable hexagon_uart_vtable = {
     // void (*endWrite)(serialPort_t *instance);
 	.serialWrite = NULL,
 	.serialTotalRxWaiting = hexagonSerialTotalRxWaiting,
-	.serialTotalTxFree = NULL,
+	.serialTotalTxFree = hexagonSerialTotalTxFree,
 	.serialRead = hexagonSerialRead,
 	.serialSetBaudRate = NULL,
-	.isSerialTransmitBufferEmpty = NULL,
+	.isSerialTransmitBufferEmpty = hexagonIsSerialTransmitBufferEmpty,
 	.setMode = NULL,
 	.setCtrlLineStateCb = NULL,
 	.setBaudRateCb = NULL,
-	.writeBuf = NULL,
+	.writeBuf = hexagonWriteBuf,
 	.beginWrite = NULL,
 	.endWrite = NULL
 };
@@ -137,6 +246,7 @@ uartPort_t *serialUART(uartDevice_t *uartdev, uint32_t baudRate, portMode_e mode
 
 	uint8_t sl_port_number = 0;
 	int hw_index = -1;
+	// TODO: Decide final mapping
 	switch(port_number) {
 	case SERIAL_PORT_USART1:
 		sl_port_number = 2;
@@ -161,16 +271,19 @@ uartPort_t *serialUART(uartDevice_t *uartdev, uint32_t baudRate, portMode_e mode
 
 	if ((hw_index > -1) && (hw_index < 4)) {
 		if (hw_index == 3) {
-			printf("Configuring MSP port");
+			printf("Configuring virtual port");
+
+		    uartHardware[hw_index].reg->fd = 3;
 		} else {
 			int fd = sl_client_config_uart(sl_port_number, baudRate);
 
 			printf("====== In serialUART. id %u port %u baudRate %lu", port_number, sl_port_number, baudRate);
 
-		    uartHardware[hw_index].reg->fd = fd;
+			uartHardware[hw_index].reg->fd = fd;
 		}
 
-	    uart_port->USARTx = uartHardware[hw_index].reg;
+		uart_port->USARTx = uartHardware[hw_index].reg;
+
 	} else {
 		printf("ERROR: Invalid port number %u", port_number);
 		return NULL;
@@ -194,7 +307,9 @@ void uartReconfigure(uartPort_t *uartPort)
 
 	printf("====== In uartReconfigure, fd %d", fd);
 
-    (void) sl_client_register_uart_callback(fd, uartPort->port.rxCallback, uartPort->port.rxCallbackData);
+	if (fd < 3) {
+    	(void) sl_client_register_uart_callback(fd, uartPort->port.rxCallback, uartPort->port.rxCallbackData);
+	}
 }
 
 void uartIrqHandler(uartPort_t *s)
