@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <pthread.h>
 
 #include "platform.h"
 
@@ -50,6 +51,62 @@ extern int sl_client_uart_read(int fd, char *buffer, const unsigned buffer_len);
 extern int sl_client_uart_flush_rx(int fd);
 extern int sl_client_uart_rx_available(int fd, uint32_t *data);
 extern int sl_client_uart_write(int fd, const char *data, const unsigned data_len);
+
+// Call this to send a message to host side
+extern int sl_client_send_data(const uint8_t *data, int data_len_in_bytes);
+
+// Called by the SLPI LINK server when there is a new message for us from host side
+int slpi_link_client_receive(const uint8_t *data, int data_len_in_bytes) __attribute__ ((visibility ("default")));
+
+#define VIRTUAL_RX_BUFFER_LEN 1024
+static uint8_t virtual_rx_buffer[VIRTUAL_RX_BUFFER_LEN];
+static uint32_t _rx_write = 0;
+static uint32_t _rx_read = 0;
+static pthread_mutex_t _lock = PTHREAD_MUTEX_INITIALIZER;
+
+int slpi_link_client_receive(const uint8_t *data, int data_len_in_bytes)
+{
+	// printf("Got %d bytes from host side. First 3 bytes: 0x%0.2x 0x%0.2x 0x%0.2x",
+	// 		data_len_in_bytes, data[0], data[1], data[2]);
+
+	bool saved_data = true;
+	pthread_mutex_lock(&_lock);
+	if (_rx_write + data_len_in_bytes < VIRTUAL_RX_BUFFER_LEN) {
+		memcpy(&virtual_rx_buffer[_rx_write], data, data_len_in_bytes);
+		_rx_write += data_len_in_bytes;
+	} else {
+		saved_data = false;
+	}
+	pthread_mutex_unlock(&_lock);
+
+	if (!saved_data) {
+		printf("ERROR: Dropped %d incoming bytes on virtual serial port", data_len_in_bytes);
+	// } else {
+	// 	printf("Saved %d incoming bytes on virtual serial port", data_len_in_bytes);
+	}
+
+    // if (data_len_in_bytes < QURT_RPC_MSG_HEADER_LEN) {
+    //     return 0;
+    // }
+    // const auto *msg = (struct qurt_rpc_msg *)data;
+    // if (msg->data_length + QURT_RPC_MSG_HEADER_LEN != data_len_in_bytes) {
+    //     return 0;
+    // }
+	// 
+    // switch (msg->msg_id) {
+    // case QURT_MSG_ID_MAVLINK_MSG: {
+    //     if ((msg->inst < MAX_MAVLINK_INSTANCES) && (mav_cb[msg->inst])) {
+    //         mav_cb[msg->inst](msg, mav_cb_ptr[msg->inst]);
+    //     }
+    //     break;
+    // }
+    // default:
+    //     HAP_PRINTF("Got unknown message id %d", msg->msg_id);
+    //     break;
+    // }
+
+    return 0;
+}
 
 USART_TypeDef hexagon_uart[NUM_HEXAGON_UART];
 
@@ -80,7 +137,7 @@ const uartHardware_t uartHardware[UARTDEV_COUNT] = {
 	},
     {
         .identifier = SERIAL_PORT_UART4,
-        .reg = USART4,
+        .reg = UART4,
         .txBuffer = uart1TxBuffer,
         .rxBuffer = uart1RxBuffer,
         .txBufferSize = sizeof(uart1TxBuffer),
@@ -116,7 +173,11 @@ uint32_t hexagonSerialTotalRxWaiting(const serialPort_t *instance) {
 
 	if ((hw_index > -1) && (hw_index < 4)) {
 		if (hw_index == 3) {
-		    // TODO for virtual port
+			// Virtual port
+			pthread_mutex_lock(&_lock);
+			bytes_waiting = _rx_write - _rx_read;
+			pthread_mutex_unlock(&_lock);
+			// printf("%lu total bytes waiting on virtual serial port to read", bytes_waiting);
 		} else {
 			(void) sl_client_uart_rx_available(uartHardware[hw_index].reg->fd, &bytes_waiting);
 		}
@@ -124,7 +185,7 @@ uint32_t hexagonSerialTotalRxWaiting(const serialPort_t *instance) {
 		printf("ERROR: Invalid port number %u", port_number);
 	}
 
-	return (uint32_t) bytes_waiting;
+	return bytes_waiting;
 }
 
 uint8_t hexagonSerialRead(serialPort_t *instance) {
@@ -155,7 +216,18 @@ uint8_t hexagonSerialRead(serialPort_t *instance) {
 
 	if ((hw_index > -1) && (hw_index < 4)) {
 		if (hw_index == 3) {
-		    // TODO for virtual port
+			// Virtual port
+			pthread_mutex_lock(&_lock);
+			if (_rx_write > _rx_read) {
+				byte_data = virtual_rx_buffer[_rx_read++];
+				// If read is all caught up then put indexes back to beginning of buffer.
+				if (_rx_read == _rx_write) {
+					_rx_read = 0;
+					_rx_write = 0;
+				}
+			}
+			pthread_mutex_unlock(&_lock);
+			// printf("Reading a byte from virtual serial port buffer");
 		} else {
 			(void) sl_client_uart_read(uartHardware[hw_index].reg->fd, (char*) &byte_data, 1);
 		}
@@ -201,10 +273,17 @@ void hexagonWriteBuf(serialPort_t *instance, const void *data, int count) {
 
 	// printf("Sending %d bytes in hexagonWriteBuf", count);
 
-	(void) sl_client_uart_write(uartHardware[hw_index].reg->fd, (const char*) data, (const unsigned) count);
+	if ((hw_index > -1) && (hw_index < 4)) {
+		if (hw_index == 3) {
+			// Virtual port
+			(void) sl_client_send_data(data, count);
+		} else {
+			(void) sl_client_uart_write(uartHardware[hw_index].reg->fd, (const char*) data, (const unsigned) count);
+		}
+	} else {
+		printf("ERROR: Invalid port number %u", port_number);
+	}
 }
-
-
 
 static struct serialPortVTable hexagon_uart_vtable = {
     // void (*serialWrite)(serialPort_t *instance, uint8_t ch);

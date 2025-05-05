@@ -281,19 +281,19 @@ extern USART_TypeDef hexagon_uart[NUM_HEXAGON_UART];
 #define USART1 ((USART_TypeDef *) &hexagon_uart[0])
 #define USART2 ((USART_TypeDef *) &hexagon_uart[1])
 #define USART3 ((USART_TypeDef *) &hexagon_uart[2])
-#define USART4 ((USART_TypeDef *) &hexagon_uart[3])
+#define USART4 ((USART_TypeDef *) NULL)
 #define USART5 ((USART_TypeDef *) NULL)
 #define USART6 ((USART_TypeDef *) NULL)
 #define USART7 ((USART_TypeDef *) NULL)
 #define USART8 ((USART_TypeDef *) NULL)
 
-#define UART4 ((USART_TypeDef *) NULL)
+#define UART4 ((USART_TypeDef *) &hexagon_uart[3])
 #define UART5 ((USART_TypeDef *) NULL)
 #define UART7 ((USART_TypeDef *) NULL)
 #define UART8 ((USART_TypeDef *) NULL)
 
-#define SERIALRX_UART SERIAL_PORT_USART2
-#define MSP_UART SERIAL_PORT_UART1
+#define SERIALRX_UART SERIAL_PORT_USART1
+#define MSP_UART SERIAL_PORT_UART4
 
 #define SIMULATOR_MAX_RC_CHANNELS   16
 #define SIMULATOR_MAX_PWM_CHANNELS  16

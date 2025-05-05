@@ -1,0 +1,73 @@
+#!/usr/bin/python3
+
+import sys
+import time
+from ctypes import *
+import socket
+import threading
+
+remote_addr = ''
+
+def receive_data(sock):
+    global remote_addr
+    while True:
+        try:
+            data, remote_addr = sock.recvfrom(1024)  # Buffer size is 1024 bytes
+            print(f"Received {len(data)} bytes from {remote_addr}")
+            betaflight.slpi_link_send(data, c_ulong(len(data)))
+        except Exception as e:
+            print(f"Error receiving data: {e}")
+            break
+
+
+def py_cb_func(data, len):
+    global remote_addr
+
+    # print('Got data callback')
+
+    data_array = cast(data, POINTER(c_ubyte * len)).contents
+    binary_data = bytes(data_array)
+
+    print(f"Sending {len} bytes to {remote_addr}")
+    # print(binary_data)
+
+    sock.sendto(binary_data, remote_addr)
+
+
+#### MAIN ####
+
+betaflight = CDLL('libslpi_link.so.1')
+
+# typedef void (*slpi_link_cb)(const uint8_t *data, uint32_t length_in_bytes);
+CBFUNC = CFUNCTYPE(None, POINTER(c_ubyte), c_ulong)
+cb_func = CBFUNC(py_cb_func)
+
+print('Calling slpi_link_init')
+
+# int slpi_link_init(bool enable_debug_messages, slpi_link_cb callback, const char *library_name);
+result = betaflight.slpi_link_init(False, cb_func, b'betaflight.so')
+
+print('slpi_link_init returned: ' + str(result))
+
+# Create a UDP socket
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# Bind the socket to the address and port
+server_address = ('', 8765) # '' means any available interface
+sock.bind(server_address)
+
+receive_thread = threading.Thread(target=receive_data, args=(sock,), daemon=True)
+receive_thread.start()
+
+while True:
+    try:
+        time.sleep(0.2)
+    except:
+        print('Got unknown exception')
+        break
+
+sock.close()
+
+# void slpi_link_reset(void);
+betaflight.slpi_link_reset(None)
+
