@@ -36,12 +36,9 @@
 #include "drivers/rcc.h"
 #include "pg/bus_spi.h"
 
+#include "sl_client.h"
+
 SPI_TypeDef hexagon_spi_bus;
-
-int sl_client_config_spi_bus(void);
-int sl_client_spi_transfer(int fd, const uint8_t *send, uint8_t *recv, const unsigned len);
-
-
 
 void spiInitDevice(SPIDevice device)
 {

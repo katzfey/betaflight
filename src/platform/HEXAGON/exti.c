@@ -29,7 +29,7 @@
 #include "drivers/io_impl.h"
 #include "drivers/exti.h"
 
-int sl_client_register_interrupt_callback(int (*func)(int, void*, void*), void* arg);
+#include "sl_client.h"
 
 static extiCallbackRec_t *exti_cb;
 static extiHandlerCallback *exti_fn;

@@ -45,15 +45,7 @@
 #include "drivers/serial_uart.h"
 #include "drivers/serial_uart_impl.h"
 
-extern int sl_client_register_uart_callback(int fd, serialReceiveCallbackPtr cb, void *arg);
-extern int sl_client_config_uart(uint8_t port_number, uint32_t speed);
-extern int sl_client_uart_read(int fd, char *buffer, const unsigned buffer_len);
-extern int sl_client_uart_flush_rx(int fd);
-extern int sl_client_uart_rx_available(int fd, uint32_t *data);
-extern int sl_client_uart_write(int fd, const char *data, const unsigned data_len);
-
-// Call this to send a message to host side
-extern int sl_client_send_data(const uint8_t *data, int data_len_in_bytes);
+#include "sl_client.h"
 
 // Called by the SLPI LINK server when there is a new message for us from host side
 int slpi_link_client_receive(const uint8_t *data, int data_len_in_bytes) __attribute__ ((visibility ("default")));

@@ -208,7 +208,8 @@ void pgResetFn_serialConfig(serialConfig_t *serialConfig)
         pCfg->blackbox_baudrateIndex = BAUD_115200;
     }
 
-    serialConfig->portConfigs[0].functionMask = FUNCTION_MSP;
+    // serialConfig->portConfigs[0].functionMask = FUNCTION_MSP;
+    serialConfig->portConfigs[0].functionMask = FUNCTION_NONE;
 
 #ifdef MSP_UART
     serialPortConfig_t *uart2Config = serialFindPortConfigurationMutable(MSP_UART);
