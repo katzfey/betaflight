@@ -6,6 +6,7 @@
 #include "drivers/motor_impl.h"
 #include "pg/motor.h"
 #include "sl_client.h"
+#include "drivers/time.h"
 
 #define HEXAGON_MAX_MOTORS 4
 
@@ -28,10 +29,52 @@
 static bool motorEnabled[HEXAGON_MAX_MOTORS];
 static float motorSpeed[HEXAGON_MAX_MOTORS];
 static int motor_fd = -1;
+static serialReceiveCallbackPtr motorTelemCB;
+static uint8_t last_fb_idx;
+static uint32_t last_fb_req_ms;
 
-// TODO: For requesting feedback
-// static uint8_t last_fb_idx;
-// static uint32_t last_fb_req_ms;
+struct __attribute__((packed)) extended_version_info {
+    uint8_t  id;
+    uint16_t sw_version;
+    uint16_t hw_version;
+    uint8_t  unique_id[12];
+    char     firmware_git_version[12];
+    char     bootloader_git_version[12];
+    uint16_t bootloader_version;
+    uint16_t crc;
+};
+
+struct __attribute__((packed)) esc_response_v2 {
+    uint8_t  id_state;     // bits 0:3 = state, bits 4:7 = ID
+
+    uint16_t rpm;          // Current RPM of the motor
+    uint8_t  cmd_counter;  // Number of commands received by the ESC
+    uint8_t  power;        // Applied power [0..100]
+
+    uint16_t voltage;      // Voltage measured by the ESC in mV
+    int16_t  current;      // Current measured by the ESC in 8mA resolution
+    int16_t  temperature;  // Temperature measured by the ESC in 0.01 degC resolution
+};
+
+struct __attribute__((packed)) esc_power_status {
+    uint8_t  id;       //ESC Id (could be used as system ID elsewhere)
+    uint16_t voltage;  //Input voltage (Millivolts)
+    int16_t  current;  //Total Current (8mA resolution)
+};
+
+struct motor_status {
+	bool fb_active;
+	struct __attribute__((packed)) esc_response_v2 fb;
+} motorFeedback[HEXAGON_MAX_MOTORS];
+
+struct power_status {
+	bool ps_active;
+	struct __attribute__((packed)) esc_power_status ps;
+} powerFeedback;
+
+void registerTelemCallback(serialReceiveCallbackPtr cb) {
+	motorTelemCB = cb;
+}
 
 // Calculate Modbus CRC16 for array of bytes
 uint16_t calc_crc_modbus(const uint8_t *buf, uint16_t len)
@@ -81,6 +124,69 @@ static int16_t pwm_to_esc(uint16_t pwm)
     return (int16_t)(800.0f * p);
 }
 
+// check for responses
+static void check_response(void)
+{
+    uint8_t buf[256];
+    struct __attribute__((packed)) data_packet {
+        uint8_t header;
+        uint8_t length;
+        uint8_t type;
+        union {
+            struct extended_version_info ver_info;
+            struct esc_response_v2 resp_v2;
+            struct esc_power_status power_status;
+        } u;
+    };
+    int n = sl_client_uart_read(motor_fd, (char *)buf, sizeof(buf));
+    // TODO: Maintain a count of total received bytes over time
+    printf("Motor response bytes: %d", n);
+    while (n >= 3) {
+        const struct data_packet *pkt = (struct data_packet *)buf;
+        if (pkt->header != PKT_HEADER || pkt->length > n) {
+            return;
+        }
+        const uint16_t crc = calc_crc_modbus(&pkt->length, pkt->length-3);
+        const uint16_t crc2 = buf[pkt->length-2] | buf[pkt->length-1]<<8;
+        if (crc != crc2) {
+            // TODO: Maintain a count of failed CRCs over time
+            printf("Motor CRC fail on input");
+            return;
+        }
+        switch (pkt->type) {
+        case PACKET_TYPE_VERSION_EXT_RESPONSE:
+            printf("Motor version response");
+            // handle_version_feedback(pkt->u.ver_info);
+            break;
+        case ESC_PACKET_TYPE_FB_RESPONSE:
+		{
+			uint8_t motor_id = pkt->u.resp_v2.id_state >> 4;
+			if (motor_id < HEXAGON_MAX_MOTORS) {
+				motorFeedback[motor_id].fb_active = true;
+				motorFeedback[motor_id].fb = pkt->u.resp_v2;
+            	printf("Motor feedback response");
+			} else {
+            	printf("Bad id in motor feedback response: %u", motor_id);
+			}
+            break;
+		}
+        case ESC_PACKET_TYPE_FB_POWER_STATUS:
+            printf("Motor power status");
+			powerFeedback.ps_active = true;
+			powerFeedback.ps = pkt->u.power_status;
+            break;
+        default:
+            printf("Unknown pkt %u", pkt->type);
+            break;
+        }
+        if (n == pkt->length) {
+            break;
+        }
+        memmove(&buf[0], &buf[pkt->length], n - pkt->length);
+        n -= pkt->length;
+    }
+}
+
 static void send_esc_command(void)
 {
     int16_t data[5];
@@ -95,18 +201,17 @@ static void send_esc_command(void)
         data[i] &= 0xFFFE;
     }
 
-	// TODO: Add in feedback request for battery status and RPM
-    // const uint32_t now_ms = millis();
-    // if (now_ms - last_fb_req_ms > 5) {
-    //     last_fb_req_ms = now_ms;
-    //     // request feedback from one ESC
-    //     last_fb_idx = (last_fb_idx+1) % 4;
-    //     data[last_fb_idx] |= 1;
-    // }
+    const uint32_t now_ms = millis();
+    if (now_ms - last_fb_req_ms > 5) {
+        last_fb_req_ms = now_ms;
+        // request feedback from one ESC
+        last_fb_idx = (last_fb_idx+1) % 4;
+        data[last_fb_idx] |= 1;
+    }
 
     send_packet(ESC_PACKET_TYPE_PWM_CMD, (uint8_t *)data, sizeof(data));
 
-    // check_response();
+	if (data[last_fb_idx] & 1) check_response();
 }
 
 bool hexagonMotorEnabled(unsigned index) {
@@ -160,12 +265,86 @@ float hexagonConvertExternalToMotor(uint16_t externalValue)
 	return motor_range;
 }
 
-
 uint16_t hexagonConvertMotorToExternal(float motorValue)
 {
 	uint16_t motor_pwm = (uint16_t) ((motorValue * 1000.0f) + 1000.0f);
 	// printf(">>>>>>>>>>>>>>> Motor convert from %f to %u", (double) motorValue, motor_pwm);
 	return motor_pwm;
+}
+
+float erpmToRpm(uint32_t erpm)
+{
+    return (float) erpm;
+}
+
+static uint8_t updateCrc8(uint8_t crc, uint8_t crc_seed)
+{
+    uint8_t crc_u = crc;
+    crc_u ^= crc_seed;
+
+    for (int i=0; i<8; i++) {
+        crc_u = ( crc_u & 0x80 ) ? 0x7 ^ ( crc_u << 1 ) : ( crc_u << 1 );
+    }
+
+    return (crc_u);
+}
+
+static uint8_t calculateCrc8(const uint8_t *Buf, const uint8_t BufLen)
+{
+    uint8_t crc = 0;
+    for (int i = 0; i < BufLen; i++) {
+        crc = updateCrc8(Buf[i], crc);
+    }
+
+    return crc;
+}
+
+void hexagonRequestTelemetry(unsigned index) {
+	// printf("Got telemetry request for motor %u", index);
+
+	if (motorTelemCB && index < HEXAGON_MAX_MOTORS) {
+		uint8_t response[10];
+
+		if (motorFeedback[index].fb_active) {
+
+            // Temperature in deg C
+			response[0] = motorFeedback[index].fb.temperature * 100;
+
+			if (!powerFeedback.ps_active) {
+        		// Voltage 0.01V
+				uint16_t v = motorFeedback[index].fb.voltage * 10;
+				response[1] = v >> 8;
+				response[2] = v & 0xFF;
+                // Current 0.01A
+				int16_t c = (motorFeedback[index].fb.current / 8) * 10;
+				response[3] = c >> 8;
+				response[4] = c & 0xFF;
+			} else {
+				uint16_t v = powerFeedback.ps.voltage * 10;
+        		// Voltage 0.01V
+				response[1] = v >> 8;
+				response[2] = v & 0xFF;
+                // Current 0.01A
+				int16_t c = ((motorFeedback[index].fb.current / 8) * 10) / 4;
+				response[3] = c >> 8;
+				response[4] = c & 0xFF;
+			}
+
+        	// mAh ???
+			response[5] = 0x00;
+			response[6] = 0x00;
+
+        	// 0.01erpm
+			response[7] = motorFeedback[index].fb.rpm >> 8;
+			response[8] = motorFeedback[index].fb.rpm & 0xFF;
+
+			response[9] = calculateCrc8(response, 10 - 1); // CRC
+
+			for (int i = 0; i < 10; i++) {
+				motorTelemCB(response[i], NULL);
+			}
+		}
+	}
 }
 
 static const motorVTable_t vTable = {
@@ -180,7 +359,7 @@ static const motorVTable_t vTable = {
     .writeInt = NULL,
     .updateComplete = hexagonMotorUpdateComplete,
     .shutdown = NULL,
-    .requestTelemetry = NULL,
+    .requestTelemetry = hexagonRequestTelemetry,
     .isMotorIdle = NULL,
     .getMotorIO = NULL,
 };

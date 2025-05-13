@@ -285,10 +285,10 @@ void systemInit(void)
 {
     // int ret;
 	// 
-    // clock_gettime(CLOCK_MONOTONIC, &start_time);
-    // printf("[system]Init...\n");
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
+    printf("[system]Init...\n");
 	// 
-    // SystemCoreClock = 500 * 1e6; // virtual 500MHz
+    SystemCoreClock = 806 * 1e6; // TODO: What is exact clock rate of Hexagon?
 	// 
     // if (pthread_mutex_init(&updateLock, NULL) != 0) {
     //     printf("Create updateLock error!\n");

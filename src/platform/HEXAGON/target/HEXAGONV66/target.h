@@ -65,6 +65,8 @@
 #define DMA_GetCurrDataCounter(dmaResource) ((uint16_t) 0)
 #define FAST_IRQ_HANDLER
 
+#define USE_ESC_SENSOR
+
 // use simulatior's attitude directly
 // disable this if wants to test AHRS algorithm
 #undef USE_IMU_CALC
@@ -127,7 +129,7 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #define USE_UART2
 #define USE_UART3
 #define USE_UART4
-#undef USE_UART5
+#define USE_UART5
 #undef USE_UART6
 #undef USE_UART7
 #undef USE_UART8
@@ -139,7 +141,7 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #undef USE_DMA
 
 #define DEFAULT_RX_FEATURE      FEATURE_RX_SERIAL
-#define DEFAULT_FEATURES        (FEATURE_GPS | FEATURE_TELEMETRY)
+#define DEFAULT_FEATURES        (FEATURE_GPS | FEATURE_TELEMETRY | FEATURE_ESC_SENSOR)
 
 #define USE_PARAMETER_GROUPS
 
@@ -274,7 +276,7 @@ typedef struct
 	uint32_t speed;
 } USART_TypeDef;
 
-#define NUM_HEXAGON_UART 4
+#define NUM_HEXAGON_UART 5
 
 extern USART_TypeDef hexagon_uart[NUM_HEXAGON_UART];
 
@@ -288,14 +290,16 @@ extern USART_TypeDef hexagon_uart[NUM_HEXAGON_UART];
 #define USART8 ((USART_TypeDef *) NULL)
 
 #define UART4 ((USART_TypeDef *) &hexagon_uart[3])
-#define UART5 ((USART_TypeDef *) NULL)
+#define UART5 ((USART_TypeDef *) &hexagon_uart[4])
 #define UART7 ((USART_TypeDef *) NULL)
 #define UART8 ((USART_TypeDef *) NULL)
 
-// TODO: OSD on USART2
+// TODO: OSD on USART2, port 6 on SLPI
 // USART1 reserved for ESC
+// TODO: Put RX on USART1 but map it to port 7 on SLPI
 #define SERIALRX_UART SERIAL_PORT_USART3
 #define MSP_UART SERIAL_PORT_UART4 // Virtual UART
+#define ESC_SENSOR_UART SERIAL_PORT_UART5 // Another virtual UART
 
 #define SIMULATOR_MAX_RC_CHANNELS   16
 #define SIMULATOR_MAX_PWM_CHANNELS  16

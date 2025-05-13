@@ -134,6 +134,14 @@ const uartHardware_t uartHardware[UARTDEV_COUNT] = {
         .rxBuffer = uart1RxBuffer,
         .txBufferSize = sizeof(uart1TxBuffer),
         .rxBufferSize = sizeof(uart1RxBuffer),
+	},
+    {
+        .identifier = SERIAL_PORT_UART5,
+        .reg = UART5,
+        .txBuffer = uart1TxBuffer,
+        .rxBuffer = uart1RxBuffer,
+        .txBufferSize = sizeof(uart1TxBuffer),
+        .rxBufferSize = sizeof(uart1RxBuffer),
 	}
 };
 
@@ -335,16 +343,24 @@ uartPort_t *serialUART(uartDevice_t *uartdev, uint32_t baudRate, portMode_e mode
 		sl_port_number = 8;
 		hw_index = 3;
 		break;
+	case SERIAL_PORT_UART5:
+		sl_port_number = 9;
+		hw_index = 4;
+		break;
 	default:
 		printf("ERROR: Invalid port identifier");
 		break;
 	}
 
-	if ((hw_index > -1) && (hw_index < 4)) {
-		if (hw_index == 3) {
-			printf("Configuring virtual port");
+	if ((hw_index > -1) && (hw_index < NUM_HEXAGON_UART)) {
+		if (port_number == SERIAL_PORT_UART4) {
+			printf("Configuring MSP virtual port");
 
 		    uartHardware[hw_index].reg->fd = 3;
+		} else if (port_number == SERIAL_PORT_UART5) {
+			printf("Configuring ESC sensor virtual port");
+
+		    uartHardware[hw_index].reg->fd = 4;
 		} else {
 			int fd = sl_client_config_uart(sl_port_number, baudRate);
 
@@ -372,6 +388,8 @@ void uartEnableTxInterrupt(uartPort_t *uartPort)
 	printf("====== In uartEnableTxInterrupt, fd %d", fd);
 }
 
+extern void registerTelemCallback(serialReceiveCallbackPtr cb);
+
 void uartReconfigure(uartPort_t *uartPort)
 {
 	int fd = uartPort->USARTx->fd;
@@ -380,6 +398,9 @@ void uartReconfigure(uartPort_t *uartPort)
 
 	if (fd < 3) {
     	(void) sl_client_register_uart_callback(fd, uartPort->port.rxCallback, uartPort->port.rxCallbackData);
+	} else if (fd == 4) {
+		// For ESC telemetry
+		registerTelemCallback(uartPort->port.rxCallback);
 	}
 }
 
