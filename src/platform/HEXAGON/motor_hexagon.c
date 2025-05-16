@@ -166,7 +166,7 @@ static void check_response(void)
 			if (motor_id < HEXAGON_MAX_MOTORS) {
 				motorFeedback[motor_id].fb_active = true;
 				motorFeedback[motor_id].fb = pkt->u.resp_v2;
-            	// printf("Motor feedback response");
+            	// printf("Motor feedback response. id: %u, temp: %d", motor_id, motorFeedback[motor_id].fb.temperature);
 			} else {
             	printf("Bad id in motor feedback response: %u", motor_id);
 			}
@@ -321,7 +321,7 @@ void hexagonRequestTelemetry(unsigned index) {
 		if (motorFeedback[index].fb_active) {
 
             // Temperature in deg C
-			response[0] = motorFeedback[index].fb.temperature * 100;
+			response[0] = motorFeedback[index].fb.temperature / 100;
 
 			if (!powerFeedback.ps_active) {
         		// Voltage 0.01V
