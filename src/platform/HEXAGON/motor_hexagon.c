@@ -198,13 +198,6 @@ static void send_esc_command(void)
 
     for (uint8_t i = 0; i < HEXAGON_MAX_MOTORS; i++) {
 
-		// TODO: Why does betaflight configurator motor utility
-		// send 0.0 -> 1.0 but actual motor commands are 1000 -> 2000?
-		if ((motorSpeed[i] < 1.0f) && (motorSpeed[i] > 0.1f)) {
-			motorSpeed[i] = (motorSpeed[i] * 1000.0f) + 1000.0f;
-		}
-
-        // data[i] = pwm_to_esc((motorSpeed[i] * 1000.0f) + 1000.0f);
         data[i] = pwm_to_esc(motorSpeed[i]);
 
 		// TODO: How to configure the motor spin direction?
@@ -284,17 +277,12 @@ void hexagonMotorUpdateComplete(void) {
 
 float hexagonConvertExternalToMotor(uint16_t externalValue)
 {
-	float motor_range = (float) (externalValue - 1000);
-	motor_range /= 1000.0f;
-	// printf(">>>>>>>>>>>>>>> External convert from %u to %f", externalValue, (double) motor_range);
-	return motor_range;
+    return (float)externalValue;
 }
 
 uint16_t hexagonConvertMotorToExternal(float motorValue)
 {
-	uint16_t motor_pwm = (uint16_t) ((motorValue * 1000.0f) + 1000.0f);
-	// printf(">>>>>>>>>>>>>>> Motor convert from %f to %u", (double) motorValue, motor_pwm);
-	return motor_pwm;
+    return (uint16_t)motorValue;
 }
 
 float erpmToRpm(uint32_t erpm)
