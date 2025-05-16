@@ -166,7 +166,7 @@ static void check_response(void)
 			if (motor_id < HEXAGON_MAX_MOTORS) {
 				motorFeedback[motor_id].fb_active = true;
 				motorFeedback[motor_id].fb = pkt->u.resp_v2;
-            	// printf("Motor feedback response. id: %u, temp: %d", motor_id, motorFeedback[motor_id].fb.temperature);
+            	// printf("Motor feedback response. id: %u, volts: %u", motor_id, motorFeedback[motor_id].fb.voltage);
 			} else {
             	printf("Bad id in motor feedback response: %u", motor_id);
 			}
@@ -176,6 +176,7 @@ static void check_response(void)
             // printf("Motor power status");
 			powerFeedback.ps_active = true;
 			powerFeedback.ps = pkt->u.power_status;
+        	// printf("Motor power status. volts: %u, current: %d", powerFeedback.ps.voltage, powerFeedback.ps.current);
             break;
         default:
             printf("Unknown pkt %u", pkt->type);
@@ -325,20 +326,22 @@ void hexagonRequestTelemetry(unsigned index) {
 
 			if (!powerFeedback.ps_active) {
         		// Voltage 0.01V
-				uint16_t v = motorFeedback[index].fb.voltage * 10;
+				uint16_t v = motorFeedback[index].fb.voltage / 10;
 				response[1] = v >> 8;
 				response[2] = v & 0xFF;
+				// printf("Sending ESC voltage: %u %u %u", v, response[1], response[2]);
                 // Current 0.01A
-				int16_t c = (motorFeedback[index].fb.current / 8) * 10;
+				int16_t c = (motorFeedback[index].fb.current * 8) / 10;
 				response[3] = c >> 8;
 				response[4] = c & 0xFF;
 			} else {
-				uint16_t v = powerFeedback.ps.voltage * 10;
+				uint16_t v = powerFeedback.ps.voltage / 10;
         		// Voltage 0.01V
 				response[1] = v >> 8;
 				response[2] = v & 0xFF;
+				// printf("Sending ESC ps voltage: %u %u %u", v, response[1], response[2]);
                 // Current 0.01A
-				int16_t c = ((motorFeedback[index].fb.current / 8) * 10) / 4;
+				int16_t c = ((motorFeedback[index].fb.current * 8) / 10) / 4;
 				response[3] = c >> 8;
 				response[4] = c & 0xFF;
 			}
