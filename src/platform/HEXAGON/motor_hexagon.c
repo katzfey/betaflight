@@ -10,8 +10,8 @@
 
 #define HEXAGON_MAX_MOTORS 4
 
-#define ESC_BAUDRATE 921600
-// #define ESC_BAUDRATE 2000000
+// #define ESC_BAUDRATE 921600
+#define ESC_BAUDRATE 2000000
 
 // ESC specific definitions
 #define ESC_PACKET_TYPE_PWM_CMD 1
@@ -71,6 +71,8 @@ struct power_status {
 	bool ps_active;
 	struct __attribute__((packed)) esc_power_status ps;
 } powerFeedback;
+
+static uint32_t motorDebug;
 
 void registerTelemCallback(serialReceiveCallbackPtr cb) {
 	motorTelemCB = cb;
@@ -140,7 +142,7 @@ static void check_response(void)
     };
     int n = sl_client_uart_read(motor_fd, (char *)buf, sizeof(buf));
     // TODO: Maintain a count of total received bytes over time
-    printf("Motor response bytes: %d", n);
+    // printf("Motor response bytes: %d", n);
     while (n >= 3) {
         const struct data_packet *pkt = (struct data_packet *)buf;
         if (pkt->header != PKT_HEADER || pkt->length > n) {
@@ -164,14 +166,14 @@ static void check_response(void)
 			if (motor_id < HEXAGON_MAX_MOTORS) {
 				motorFeedback[motor_id].fb_active = true;
 				motorFeedback[motor_id].fb = pkt->u.resp_v2;
-            	printf("Motor feedback response");
+            	// printf("Motor feedback response");
 			} else {
             	printf("Bad id in motor feedback response: %u", motor_id);
 			}
             break;
 		}
         case ESC_PACKET_TYPE_FB_POWER_STATUS:
-            printf("Motor power status");
+            // printf("Motor power status");
 			powerFeedback.ps_active = true;
 			powerFeedback.ps = pkt->u.power_status;
             break;
@@ -195,11 +197,35 @@ static void send_esc_command(void)
     data[4] = 0;
 
     for (uint8_t i = 0; i < HEXAGON_MAX_MOTORS; i++) {
+
+		// TODO: Why does betaflight configurator motor utility
+		// send 0.0 -> 1.0 but actual motor commands are 1000 -> 2000?
+		if ((motorSpeed[i] < 1.0f) && (motorSpeed[i] > 0.1f)) {
+			motorSpeed[i] = (motorSpeed[i] * 1000.0f) + 1000.0f;
+		}
+
+        // data[i] = pwm_to_esc((motorSpeed[i] * 1000.0f) + 1000.0f);
         data[i] = pwm_to_esc(motorSpeed[i]);
+
+		// TODO: How to configure the motor spin direction?
+		data[i] *= -1;
 
         // Make sure feedback request bit is cleared for all ESCs
         data[i] &= 0xFFFE;
     }
+
+	// TODO: How to remap the motors?
+	int16_t tmp = data[0];
+	data[0] = data[1];
+	data[1] = tmp;
+
+	// if (motorDebug == 10000) {
+	if (motorDebug == 4000) {
+		printf("Motor PWM values: %d, %d, %d, %d",
+				data[0], data[1], data[2], data[3]);
+	}
+
+	// data[0] = data[1] = data[2] = data[3] = 0;
 
     const uint32_t now_ms = millis();
     if (now_ms - last_fb_req_ms > 5) {
@@ -235,8 +261,6 @@ void hexagonMotorDisable(void) {
 	}
 }
 
-static uint32_t motorDebug;
-
 void hexagonMotorWrite(uint8_t index, float value) {
 	if (index < HEXAGON_MAX_MOTORS)	{
 		if (motorEnabled[index]) {
@@ -247,14 +271,15 @@ void hexagonMotorWrite(uint8_t index, float value) {
 
 void hexagonMotorUpdateComplete(void) {
 	motorDebug++;
+
+	send_esc_command();
+
 	// if (motorDebug == 10000) {
 	if (motorDebug == 4000) {
 		printf("Motor values: %f, %f, %f, %f", (double) motorSpeed[0],
 				(double) motorSpeed[1], (double) motorSpeed[2], (double) motorSpeed[3]);
 		motorDebug = 0;
 	}
-
-	send_esc_command();
 }
 
 float hexagonConvertExternalToMotor(uint16_t externalValue)
