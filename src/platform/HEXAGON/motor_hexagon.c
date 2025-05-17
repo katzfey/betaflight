@@ -7,6 +7,7 @@
 #include "pg/motor.h"
 #include "sl_client.h"
 #include "drivers/time.h"
+#include "scheduler/scheduler.h"
 
 #define HEXAGON_MAX_MOTORS 4
 
@@ -213,12 +214,7 @@ static void send_esc_command(void)
 	data[0] = data[1];
 	data[1] = tmp;
 
-	// if (motorDebug == 10000) {
-	if (motorDebug == 4000) {
-		printf("Motor PWM values: %d, %d, %d, %d",
-				data[0], data[1], data[2], data[3]);
-	}
-
+	// TODO: If not armed zero out all PWM data
 	// data[0] = data[1] = data[2] = data[3] = 0;
 
     const uint32_t now_ms = millis();
@@ -269,9 +265,10 @@ void hexagonMotorUpdateComplete(void) {
 	send_esc_command();
 
 	// if (motorDebug == 10000) {
-	if (motorDebug == 4000) {
-		printf("Motor values: %f, %f, %f, %f", (double) motorSpeed[0],
-				(double) motorSpeed[1], (double) motorSpeed[2], (double) motorSpeed[3]);
+	if (motorDebug == 2000) {
+		printf("Cycle %lu, motors: %u, %u, %u, %u", getTaskDeltaTimeUs(TASK_PID),
+				(uint16_t) motorSpeed[0], (uint16_t) motorSpeed[1], (uint16_t) motorSpeed[2],
+				(uint16_t) motorSpeed[3]);
 		motorDebug = 0;
 	}
 }
