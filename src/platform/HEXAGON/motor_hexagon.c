@@ -398,6 +398,8 @@ bool motorPwmDevInit(motorDevice_t *device, const motorDevConfig_t *motorConfig,
 		return false;
 	}
 
+	(void) sl_client_disable_uart_tx_wait(motor_fd);
+
 	// TODO: Handshake with ESC, check for IO board
 
 	printf("Initialized motor count %d", device->count);

@@ -3,6 +3,7 @@
 
 extern int sl_client_register_uart_callback(int fd, serialReceiveCallbackPtr cb, void *arg);
 extern int sl_client_config_uart(uint8_t port_number, uint32_t speed);
+extern int sl_client_disable_uart_tx_wait(int fd);
 extern int sl_client_uart_read(int fd, char *buffer, const unsigned buffer_len);
 extern int sl_client_uart_flush_rx(int fd);
 extern int sl_client_uart_rx_available(int fd, uint32_t *data);
