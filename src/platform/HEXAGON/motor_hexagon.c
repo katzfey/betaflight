@@ -8,6 +8,7 @@
 #include "sl_client.h"
 #include "drivers/time.h"
 #include "scheduler/scheduler.h"
+#include "fc/tasks.h"
 
 #define HEXAGON_MAX_MOTORS 4
 
@@ -266,9 +267,11 @@ void hexagonMotorUpdateComplete(void) {
 
 	// if (motorDebug == 10000) {
 	if (motorDebug == 2000) {
-		printf("Cycle %lu, motors: %u, %u, %u, %u", getTaskDeltaTimeUs(TASK_PID),
-				(uint16_t) motorSpeed[0], (uint16_t) motorSpeed[1], (uint16_t) motorSpeed[2],
-				(uint16_t) motorSpeed[3]);
+		printf("Gyro actual %lu, desired %lu, PID %lu",
+				getTaskDeltaTimeUs(TASK_GYRO), getTask(TASK_GYRO)->attribute->desiredPeriodUs,
+				getTaskDeltaTimeUs(TASK_PID));
+		printf("Motors: %u, %u, %u, %u", (uint16_t) motorSpeed[0], (uint16_t) motorSpeed[1],
+				(uint16_t) motorSpeed[2], (uint16_t) motorSpeed[3]);
 		motorDebug = 0;
 	}
 }

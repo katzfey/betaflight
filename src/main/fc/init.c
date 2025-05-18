@@ -735,12 +735,12 @@ void init(void)
     // Set the targetLooptime based on the detected gyro sampleRateHz and pid_process_denom
     gyroSetTargetLooptime(pidConfig()->pid_process_denom);
 
-	printf("before validateAndFixGyroConfig");
+	printf("before validateAndFixGyroConfig: PID denom %u", pidConfig()->pid_process_denom);
 
     // Validate and correct the gyro config or PID loop time if needed
     validateAndFixGyroConfig();
 
-	printf("before gyroSetTargetLooptime");
+	printf("before gyroSetTargetLooptime: PID denom %u", pidConfig()->pid_process_denom);
 
     // Now reset the targetLooptime as it's possible for the validation to change the pid_process_denom
     gyroSetTargetLooptime(pidConfig()->pid_process_denom);

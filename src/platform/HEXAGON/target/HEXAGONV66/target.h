@@ -95,7 +95,10 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #define U_ID_2 2
 
 #undef TASK_GYROPID_DESIRED_PERIOD
-#define TASK_GYROPID_DESIRED_PERIOD     100
+// #define TASK_GYROPID_DESIRED_PERIOD     125
+#define TASK_GYROPID_DESIRED_PERIOD     1000
+#define BRUSHLESS_MOTORS_PWM_RATE 1000
+
 
 #undef SCHEDULER_DELAY_LIMIT
 #define SCHEDULER_DELAY_LIMIT           1

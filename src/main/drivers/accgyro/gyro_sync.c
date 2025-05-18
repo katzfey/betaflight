@@ -84,8 +84,10 @@ uint16_t gyroSetSampleRate(gyroDev_t *gyro)
             break;
 #endif
         default:
-            gyro->gyroRateKHz = GYRO_RATE_8_kHz;
-            gyroSampleRateHz = 8000;
+            // gyro->gyroRateKHz = GYRO_RATE_8_kHz;
+            // gyroSampleRateHz = 8000;
+            gyro->gyroRateKHz = GYRO_RATE_1_kHz;
+            gyroSampleRateHz = 1000;
             accSampleRateHz = 1000;
             break;
     }
