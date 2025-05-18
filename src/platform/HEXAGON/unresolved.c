@@ -87,7 +87,7 @@ static struct timespec start_time;
 
 uint32_t clockMicrosToCycles(uint32_t micros)
 {
-    return micros;
+    return micros * 806;
 }
 
 uint64_t micros64(void)
@@ -121,12 +121,12 @@ uint32_t millis(void)
 
 uint32_t getCycleCounter(void)
 {
-    return (uint32_t) (micros64() & 0xFFFFFFFF);
+    return (uint32_t) ((micros64() & 0xFFFFFFFF) * 806);
 }
 
 int32_t clockCyclesToMicros(int32_t clockCycles)
 {
-    return clockCycles;
+    return clockCycles / 806;
 }
 
 float clockCyclesToMicrosf(int32_t clockCycles)
