@@ -21,6 +21,10 @@
 #include "config/config_streamer_impl.h"
 #include "config/config_eeprom_impl.h"
 
+// TODO: Why can't we use 806?
+//       Seems to generate math problems in scheduler with 860...
+#define HEXAGON_SYS_CLOCK_MULT 100
+
 void *dmaDescriptors;
 
 uint32_t SystemCoreClock;
@@ -87,7 +91,7 @@ static struct timespec start_time;
 
 uint32_t clockMicrosToCycles(uint32_t micros)
 {
-    return micros * 806;
+    return micros * HEXAGON_SYS_CLOCK_MULT;
 }
 
 uint64_t micros64(void)
@@ -121,12 +125,12 @@ uint32_t millis(void)
 
 uint32_t getCycleCounter(void)
 {
-    return (uint32_t) ((micros64() & 0xFFFFFFFF) * 806);
+    return (uint32_t) ((micros64() & 0xFFFFFFFF) * HEXAGON_SYS_CLOCK_MULT);
 }
 
 int32_t clockCyclesToMicros(int32_t clockCycles)
 {
-    return clockCycles / 806;
+    return clockCycles / HEXAGON_SYS_CLOCK_MULT;
 }
 
 float clockCyclesToMicrosf(int32_t clockCycles)
@@ -288,7 +292,7 @@ void systemInit(void)
     clock_gettime(CLOCK_MONOTONIC, &start_time);
     printf("[system]Init...\n");
 	// 
-    SystemCoreClock = 806 * 1e6; // TODO: What is exact clock rate of Hexagon?
+    SystemCoreClock = HEXAGON_SYS_CLOCK_MULT * 1e6;
 	// 
     // if (pthread_mutex_init(&updateLock, NULL) != 0) {
     //     printf("Create updateLock error!\n");
