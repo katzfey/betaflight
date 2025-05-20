@@ -366,3 +366,15 @@ void IOToggle(IO_t io)
 {
 	(void) io;
 }
+
+PG_REGISTER_WITH_RESET_FN(serialPinConfig_t, serialPinConfig, PG_SERIAL_PIN_CONFIG, 0);
+
+void pgResetFn_serialPinConfig(serialPinConfig_t *serialPinConfig)
+{
+	(void) serialPinConfig;
+}
+
+void uartPinConfigure(const serialPinConfig_t *pSerialPinConfig) {
+	(void) pSerialPinConfig;
+}
+
