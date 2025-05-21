@@ -97,19 +97,19 @@ typedef struct {
 
 typedef enum {
     /* Actual tasks */
-    TASK_SYSTEM = 0,
-    TASK_MAIN,
-    TASK_GYRO,
-    TASK_FILTER,
-    TASK_PID,
+    // TASK_SYSTEM = 0,
+    // TASK_MAIN,
+    TASK_GYRO = 0,
+    // TASK_FILTER,
+    // TASK_PID,
     TASK_ACCEL,
     TASK_ATTITUDE,
-    TASK_RX,
-    TASK_SERIAL,
-    TASK_DISPATCH,
-    TASK_BATTERY_VOLTAGE,
-    TASK_BATTERY_CURRENT,
-    TASK_BATTERY_ALERTS,
+    // TASK_RX,
+    // TASK_SERIAL,
+    // TASK_DISPATCH,
+    // TASK_BATTERY_VOLTAGE,
+    // TASK_BATTERY_CURRENT,
+    // TASK_BATTERY_ALERTS,
 #ifdef USE_BEEPER
     TASK_BEEPER,
 #endif

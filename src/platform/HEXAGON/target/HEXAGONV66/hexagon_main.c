@@ -9,6 +9,7 @@
 extern void HAP_debug(const char *msg, int level, const char *filename, int line);
 
 #include "pg/pg.h"
+#include "fc/tasks.h"
 
 const pgRegistry_t __pg_registry_start[32];
 const pgRegistry_t __pg_registry_end[32];
@@ -28,6 +29,15 @@ void HAP_printf(const char *format, ...)
 	//usleep(20000);
 }
 
+uint32_t micros(void) {
+	struct timespec tp;
+	clock_gettime(CLOCK_MONOTONIC, &tp);
+
+	uint32_t result = (uint32_t)(tp.tv_sec) * 1000000;
+	result += (uint32_t)(tp.tv_nsec / 1000);
+	return result;
+}
+
 void init(void)
 {
     HAP_printf("betaflight init");
@@ -40,6 +50,8 @@ void init(void)
 	return;
 }
 
+static FAST_DATA_ZERO_INIT bool gyroEnabled;
+
 void scheduler(void)
 {
 	static int debug_print = 0;
@@ -49,6 +61,27 @@ void scheduler(void)
 		debug_print = 0;
 	}
 	debug_print++;
+
+	/* Start actual scheduler */
+    static uint32_t checkCycles = 0;
+    static uint32_t scheduleCount = 0;
+    const timeUs_t schedulerStartTimeUs = micros();
+
+    timeUs_t currentTimeUs;
+    uint32_t nowCycles;
+    timeUs_t taskExecutionTimeUs = 0;
+    task_t *selectedTask = NULL;
+    uint16_t selectedTaskDynamicPriority = 0;
+    uint32_t nextTargetCycles = 0;
+    int32_t schedLoopRemainingCycles;
+    bool firstSchedulingOpportunity = false;
+
+    if (gyroEnabled) {
+        // Realtime gyro/filtering/PID tasks get complete priority
+        task_t *gyroTask = getTask(TASK_GYRO);
+	}
+
+	/* End actual scheduler */
 
 	qurt_timer_sleep(10);
 

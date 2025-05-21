@@ -141,18 +141,18 @@ static void taskHandleSerial(timeUs_t currentTimeUs)
     DEBUG_SET(DEBUG_USB, 1, usbVcpIsConnected());
 #endif
 
-    bool evaluateMspData = ARMING_FLAG(ARMED) ? MSP_SKIP_NON_MSP_DATA : MSP_EVALUATE_NON_MSP_DATA;
-    mspSerialProcess(evaluateMspData, mspFcProcessCommand, mspFcProcessReply);
+    // bool evaluateMspData = ARMING_FLAG(ARMED) ? MSP_SKIP_NON_MSP_DATA : MSP_EVALUATE_NON_MSP_DATA;
+    // mspSerialProcess(evaluateMspData, mspFcProcessCommand, mspFcProcessReply);
 }
 
 static void taskBatteryAlerts(timeUs_t currentTimeUs)
 {
-    if (!ARMING_FLAG(ARMED)) {
-        // the battery *might* fall out in flight, but if that happens the FC will likely be off too unless the user has battery backup.
-        batteryUpdatePresence();
-    }
-    batteryUpdateStates(currentTimeUs);
-    batteryUpdateAlarms();
+    // if (!ARMING_FLAG(ARMED)) {
+    //     // the battery *might* fall out in flight, but if that happens the FC will likely be off too unless the user has battery backup.
+    //     batteryUpdatePresence();
+    // }
+    // batteryUpdateStates(currentTimeUs);
+    // batteryUpdateAlarms();
 }
 
 #ifdef USE_ACC
@@ -178,67 +178,67 @@ bool taskUpdateRxMainInProgress(void)
 
 static void taskUpdateRxMain(timeUs_t currentTimeUs)
 {
-    static timeDelta_t rxStateDurationFractionUs[RX_STATE_COUNT];
-    timeDelta_t executeTimeUs;
-    rxState_e oldRxState = rxState;
-    timeDelta_t anticipatedExecutionTime;
-
-    // Where we are using a state machine call schedulerIgnoreTaskExecRate() for all states bar one
-    if (rxState != RX_STATE_UPDATE) {
-        schedulerIgnoreTaskExecRate();
-    }
-
-    switch (rxState) {
-    default:
-    case RX_STATE_CHECK:
-        if (!processRx(currentTimeUs)) {
-            rxState = RX_STATE_CHECK;
-            break;
-        }
-        rxState = RX_STATE_MODES;
-        break;
-
-    case RX_STATE_MODES:
-        processRxModes(currentTimeUs);
-        rxState = RX_STATE_UPDATE;
-        break;
-
-    case RX_STATE_UPDATE:
-        // updateRcCommands sets rcCommand, which is needed by updateAltHold and updateSonarAltHoldState
-        updateRcCommands();
-        updateArmingStatus();
-
-#ifdef USE_USB_CDC_HID
-        if (!ARMING_FLAG(ARMED)) {
-            sendRcDataToHid();
-        }
-#endif
-        rxState = RX_STATE_CHECK;
-        break;
-    }
-
-    if (!schedulerGetIgnoreTaskExecTime()) {
-        executeTimeUs = micros() - currentTimeUs + RX_TASK_MARGIN;
-
-        // If the scheduler has reduced the anticipatedExecutionTime due to task aging, pick that up
-        anticipatedExecutionTime = schedulerGetNextStateTime();
-        if (anticipatedExecutionTime != (rxStateDurationFractionUs[oldRxState] >> RX_TASK_DECAY_SHIFT)) {
-            rxStateDurationFractionUs[oldRxState] = anticipatedExecutionTime << RX_TASK_DECAY_SHIFT;
-        }
-
-        if (executeTimeUs > (rxStateDurationFractionUs[oldRxState] >> RX_TASK_DECAY_SHIFT)) {
-            rxStateDurationFractionUs[oldRxState] = executeTimeUs << RX_TASK_DECAY_SHIFT;
-        } else {
-            // Slowly decay the max time
-            rxStateDurationFractionUs[oldRxState]--;
-        }
-    }
-
-    if (debugMode == DEBUG_RX_STATE_TIME) {
-        debug[oldRxState] = rxStateDurationFractionUs[oldRxState] >> RX_TASK_DECAY_SHIFT;
-    }
-
-    schedulerSetNextStateTime(rxStateDurationFractionUs[rxState] >> RX_TASK_DECAY_SHIFT);
+//     static timeDelta_t rxStateDurationFractionUs[RX_STATE_COUNT];
+//     timeDelta_t executeTimeUs;
+//     rxState_e oldRxState = rxState;
+//     timeDelta_t anticipatedExecutionTime;
+// 
+//     // Where we are using a state machine call schedulerIgnoreTaskExecRate() for all states bar one
+//     if (rxState != RX_STATE_UPDATE) {
+//         schedulerIgnoreTaskExecRate();
+//     }
+// 
+//     switch (rxState) {
+//     default:
+//     case RX_STATE_CHECK:
+//         if (!processRx(currentTimeUs)) {
+//             rxState = RX_STATE_CHECK;
+//             break;
+//         }
+//         rxState = RX_STATE_MODES;
+//         break;
+// 
+//     case RX_STATE_MODES:
+//         processRxModes(currentTimeUs);
+//         rxState = RX_STATE_UPDATE;
+//         break;
+// 
+//     case RX_STATE_UPDATE:
+//         // updateRcCommands sets rcCommand, which is needed by updateAltHold and updateSonarAltHoldState
+//         updateRcCommands();
+//         updateArmingStatus();
+// 
+// #ifdef USE_USB_CDC_HID
+//         if (!ARMING_FLAG(ARMED)) {
+//             sendRcDataToHid();
+//         }
+// #endif
+//         rxState = RX_STATE_CHECK;
+//         break;
+//     }
+// 
+//     if (!schedulerGetIgnoreTaskExecTime()) {
+//         executeTimeUs = micros() - currentTimeUs + RX_TASK_MARGIN;
+// 
+//         // If the scheduler has reduced the anticipatedExecutionTime due to task aging, pick that up
+//         anticipatedExecutionTime = schedulerGetNextStateTime();
+//         if (anticipatedExecutionTime != (rxStateDurationFractionUs[oldRxState] >> RX_TASK_DECAY_SHIFT)) {
+//             rxStateDurationFractionUs[oldRxState] = anticipatedExecutionTime << RX_TASK_DECAY_SHIFT;
+//         }
+// 
+//         if (executeTimeUs > (rxStateDurationFractionUs[oldRxState] >> RX_TASK_DECAY_SHIFT)) {
+//             rxStateDurationFractionUs[oldRxState] = executeTimeUs << RX_TASK_DECAY_SHIFT;
+//         } else {
+//             // Slowly decay the max time
+//             rxStateDurationFractionUs[oldRxState]--;
+//         }
+//     }
+// 
+//     if (debugMode == DEBUG_RX_STATE_TIME) {
+//         debug[oldRxState] = rxStateDurationFractionUs[oldRxState] >> RX_TASK_DECAY_SHIFT;
+//     }
+// 
+//     schedulerSetNextStateTime(rxStateDurationFractionUs[rxState] >> RX_TASK_DECAY_SHIFT);
 }
 
 #ifdef USE_GPS_RESCUE
@@ -354,12 +354,12 @@ task_t tasks[TASK_COUNT];
 // Task ID data in .data (initialised data)
 task_attribute_t task_attributes[TASK_COUNT] = {
 
-    [TASK_SYSTEM] = DEFINE_TASK("SYSTEM", "LOAD", NULL, taskSystemLoad, TASK_PERIOD_HZ(10), TASK_PRIORITY_MEDIUM_HIGH),
-    [TASK_MAIN] = DEFINE_TASK("SYSTEM", "UPDATE", NULL, taskMain, TASK_PERIOD_HZ(1000), TASK_PRIORITY_MEDIUM_HIGH),
-    [TASK_SERIAL] = DEFINE_TASK("SERIAL", NULL, NULL, taskHandleSerial, TASK_PERIOD_HZ(100), TASK_PRIORITY_LOW), // 100 Hz should be enough to flush up to 115 bytes @ 115200 baud
-    [TASK_BATTERY_ALERTS] = DEFINE_TASK("BATTERY_ALERTS", NULL, NULL, taskBatteryAlerts, TASK_PERIOD_HZ(5), TASK_PRIORITY_MEDIUM),
-    [TASK_BATTERY_VOLTAGE] = DEFINE_TASK("BATTERY_VOLTAGE", NULL, NULL, batteryUpdateVoltage, TASK_PERIOD_HZ(SLOW_VOLTAGE_TASK_FREQ_HZ), TASK_PRIORITY_MEDIUM), // Freq may be updated in tasksInit
-    [TASK_BATTERY_CURRENT] = DEFINE_TASK("BATTERY_CURRENT", NULL, NULL, batteryUpdateCurrentMeter, TASK_PERIOD_HZ(50), TASK_PRIORITY_MEDIUM),
+    // [TASK_SYSTEM] = DEFINE_TASK("SYSTEM", "LOAD", NULL, taskSystemLoad, TASK_PERIOD_HZ(10), TASK_PRIORITY_MEDIUM_HIGH),
+    // [TASK_MAIN] = DEFINE_TASK("SYSTEM", "UPDATE", NULL, taskMain, TASK_PERIOD_HZ(1000), TASK_PRIORITY_MEDIUM_HIGH),
+    // [TASK_SERIAL] = DEFINE_TASK("SERIAL", NULL, NULL, taskHandleSerial, TASK_PERIOD_HZ(100), TASK_PRIORITY_LOW), // 100 Hz should be enough to flush up to 115 bytes @ 115200 baud
+    // [TASK_BATTERY_ALERTS] = DEFINE_TASK("BATTERY_ALERTS", NULL, NULL, taskBatteryAlerts, TASK_PERIOD_HZ(5), TASK_PRIORITY_MEDIUM),
+    // [TASK_BATTERY_VOLTAGE] = DEFINE_TASK("BATTERY_VOLTAGE", NULL, NULL, batteryUpdateVoltage, TASK_PERIOD_HZ(SLOW_VOLTAGE_TASK_FREQ_HZ), TASK_PRIORITY_MEDIUM), // Freq may be updated in tasksInit
+    // [TASK_BATTERY_CURRENT] = DEFINE_TASK("BATTERY_CURRENT", NULL, NULL, batteryUpdateCurrentMeter, TASK_PERIOD_HZ(50), TASK_PRIORITY_MEDIUM),
 
 #ifdef USE_TRANSPONDER
     [TASK_TRANSPONDER] = DEFINE_TASK("TRANSPONDER", NULL, NULL, transponderUpdate, TASK_PERIOD_HZ(250), TASK_PRIORITY_LOW),
@@ -370,16 +370,16 @@ task_attribute_t task_attributes[TASK_COUNT] = {
 #endif
 
     [TASK_GYRO] = DEFINE_TASK("GYRO", NULL, NULL, taskGyroSample, TASK_GYROPID_DESIRED_PERIOD, TASK_PRIORITY_REALTIME),
-    [TASK_FILTER] = DEFINE_TASK("FILTER", NULL, NULL, taskFiltering, TASK_GYROPID_DESIRED_PERIOD, TASK_PRIORITY_REALTIME),
-    [TASK_PID] = DEFINE_TASK("PID", NULL, NULL, taskMainPidLoop, TASK_GYROPID_DESIRED_PERIOD, TASK_PRIORITY_REALTIME),
+    // [TASK_FILTER] = DEFINE_TASK("FILTER", NULL, NULL, taskFiltering, TASK_GYROPID_DESIRED_PERIOD, TASK_PRIORITY_REALTIME),
+    // [TASK_PID] = DEFINE_TASK("PID", NULL, NULL, taskMainPidLoop, TASK_GYROPID_DESIRED_PERIOD, TASK_PRIORITY_REALTIME),
 
 #ifdef USE_ACC
     [TASK_ACCEL] = DEFINE_TASK("ACC", NULL, NULL, taskUpdateAccelerometer, TASK_PERIOD_HZ(1000), TASK_PRIORITY_MEDIUM),
     [TASK_ATTITUDE] = DEFINE_TASK("ATTITUDE", NULL, NULL, imuUpdateAttitude, TASK_PERIOD_HZ(100), TASK_PRIORITY_MEDIUM),
 #endif
 
-    [TASK_RX] = DEFINE_TASK("RX", NULL, rxUpdateCheck, taskUpdateRxMain, TASK_PERIOD_HZ(33), TASK_PRIORITY_HIGH), // If event-based scheduling doesn't work, fallback to periodic scheduling
-    [TASK_DISPATCH] = DEFINE_TASK("DISPATCH", NULL, NULL, dispatchProcess, TASK_PERIOD_HZ(1000), TASK_PRIORITY_HIGH),
+    // [TASK_RX] = DEFINE_TASK("RX", NULL, rxUpdateCheck, taskUpdateRxMain, TASK_PERIOD_HZ(33), TASK_PRIORITY_HIGH), // If event-based scheduling doesn't work, fallback to periodic scheduling
+    // [TASK_DISPATCH] = DEFINE_TASK("DISPATCH", NULL, NULL, dispatchProcess, TASK_PERIOD_HZ(1000), TASK_PRIORITY_HIGH),
 
 #ifdef USE_BEEPER
     [TASK_BEEPER] = DEFINE_TASK("BEEPER", NULL, NULL, beeperUpdate, TASK_PERIOD_HZ(100), TASK_PRIORITY_LOW),
@@ -497,25 +497,25 @@ void tasksInit(void)
 {
     schedulerInit();
 
-    setTaskEnabled(TASK_MAIN, true);
+    // setTaskEnabled(TASK_MAIN, true);
 
-    setTaskEnabled(TASK_SERIAL, true);
-    rescheduleTask(TASK_SERIAL, TASK_PERIOD_HZ(serialConfig()->serial_update_rate_hz));
+    // setTaskEnabled(TASK_SERIAL, true);
+    // rescheduleTask(TASK_SERIAL, TASK_PERIOD_HZ(serialConfig()->serial_update_rate_hz));
 
-    const bool useBatteryVoltage = batteryConfig()->voltageMeterSource != VOLTAGE_METER_NONE;
-    setTaskEnabled(TASK_BATTERY_VOLTAGE, useBatteryVoltage);
+    // const bool useBatteryVoltage = batteryConfig()->voltageMeterSource != VOLTAGE_METER_NONE;
+    // setTaskEnabled(TASK_BATTERY_VOLTAGE, useBatteryVoltage);
 
-#if defined(USE_BATTERY_VOLTAGE_SAG_COMPENSATION)
-    // If vbat motor output compensation is used, use fast vbat samplingTime
-    if (isSagCompensationConfigured()) {
-        rescheduleTask(TASK_BATTERY_VOLTAGE, TASK_PERIOD_HZ(FAST_VOLTAGE_TASK_FREQ_HZ));
-    }
-#endif
+// #if defined(USE_BATTERY_VOLTAGE_SAG_COMPENSATION)
+//     // If vbat motor output compensation is used, use fast vbat samplingTime
+//     if (isSagCompensationConfigured()) {
+//         rescheduleTask(TASK_BATTERY_VOLTAGE, TASK_PERIOD_HZ(FAST_VOLTAGE_TASK_FREQ_HZ));
+//     }
+// #endif
 
-    const bool useBatteryCurrent = batteryConfig()->currentMeterSource != CURRENT_METER_NONE;
-    setTaskEnabled(TASK_BATTERY_CURRENT, useBatteryCurrent);
-    const bool useBatteryAlerts = batteryConfig()->useVBatAlerts || batteryConfig()->useConsumptionAlerts || featureIsEnabled(FEATURE_OSD);
-    setTaskEnabled(TASK_BATTERY_ALERTS, (useBatteryVoltage || useBatteryCurrent) && useBatteryAlerts);
+    // const bool useBatteryCurrent = batteryConfig()->currentMeterSource != CURRENT_METER_NONE;
+    // setTaskEnabled(TASK_BATTERY_CURRENT, useBatteryCurrent);
+    // const bool useBatteryAlerts = batteryConfig()->useVBatAlerts || batteryConfig()->useConsumptionAlerts || featureIsEnabled(FEATURE_OSD);
+    // setTaskEnabled(TASK_BATTERY_ALERTS, (useBatteryVoltage || useBatteryCurrent) && useBatteryAlerts);
 
 #ifdef USE_STACK_CHECK
     setTaskEnabled(TASK_STACK_CHECK, true);
@@ -523,11 +523,11 @@ void tasksInit(void)
 
     if (sensors(SENSOR_GYRO)) {
         rescheduleTask(TASK_GYRO, gyro.sampleLooptime);
-        rescheduleTask(TASK_FILTER, gyro.targetLooptime);
-        rescheduleTask(TASK_PID, gyro.targetLooptime);
+        // rescheduleTask(TASK_FILTER, gyro.targetLooptime);
+        // rescheduleTask(TASK_PID, gyro.targetLooptime);
         setTaskEnabled(TASK_GYRO, true);
-        setTaskEnabled(TASK_FILTER, true);
-        setTaskEnabled(TASK_PID, true);
+        // setTaskEnabled(TASK_FILTER, true);
+        // setTaskEnabled(TASK_PID, true);
         schedulerEnableGyro();
     }
 
@@ -551,9 +551,9 @@ void tasksInit(void)
     }
 #endif
 
-    setTaskEnabled(TASK_RX, true);
-
-    setTaskEnabled(TASK_DISPATCH, dispatchIsEnabled());
+    // setTaskEnabled(TASK_RX, true);
+	// 
+    // setTaskEnabled(TASK_DISPATCH, dispatchIsEnabled());
 
 #ifdef USE_BEEPER
     setTaskEnabled(TASK_BEEPER, true);
