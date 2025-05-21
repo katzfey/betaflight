@@ -86,7 +86,6 @@
 #include "telemetry/telemetry.h"
 
 #if defined(USE_HOTT_TEXTMODE) && defined(USE_CMS)
-
 #include "scheduler/scheduler.h"
 #include "io/displayport_hott.h"
 
