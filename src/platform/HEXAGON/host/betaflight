@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
+import os
+import stat
 import sys
 import time
 from ctypes import *
 import socket
 import threading
-
-remote_addr = ''
 
 def receive_data(sock):
     global remote_addr
@@ -49,14 +49,34 @@ def py_cb_func(data, len):
     else:
         print("Got unknown data packet" + str(data_array[0]))
 
+def check_named_pipe_existence(pipe_path):
+    """
+    Checks if a named pipe exists at the given path.
+
+    Args:
+        pipe_path: The path to the named pipe.
+
+    Returns:
+        True if the named pipe exists, False otherwise.
+    """
+    try:
+        mode = os.stat(pipe_path).st_mode
+        return stat.S_ISFIFO(mode)
+    except FileNotFoundError:
+        return False
+
 #### MAIN ####
 
+remote_addr = ''
+
 pipe_path = "/tmp/osd_pipe"
-pipe_open = True
-try:
-    pipe = open(pipe_path, 'wb')
-except:
-    pipe_open = False
+pipe_open = False
+if check_named_pipe_existence(pipe_path):
+    try:
+        pipe = open(pipe_path, 'wb')
+        pipe_open = True
+    except:
+        pass
 
 betaflight = CDLL('libslpi_link.so.1')
 
