@@ -29,6 +29,8 @@ void *dmaDescriptors;
 
 uint32_t SystemCoreClock;
 
+bool useDshotTelemetry = false;
+
 char _estack;
 char _Min_Stack_Size;
 

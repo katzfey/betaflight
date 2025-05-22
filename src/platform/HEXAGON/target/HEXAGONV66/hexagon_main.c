@@ -50,10 +50,10 @@ void *main_thread_trampoline(void *arg)
 int slpi_link_client_init(void)
 {
     // HAP_printf("About to call betaflight_main");
-    int max_priority = sched_get_priority_max(SCHED_FIFO);
-    HAP_printf("Setting pthread priority to %d", max_priority);
+    int betaflight_thread_priority = sched_get_priority_max(SCHED_FIFO) - 20;
+    HAP_printf("Setting pthread priority to %d", betaflight_thread_priority);
 
-    struct sched_param param = { .sched_priority = max_priority };
+    struct sched_param param = { .sched_priority = betaflight_thread_priority };
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setschedparam(&attr, &param);

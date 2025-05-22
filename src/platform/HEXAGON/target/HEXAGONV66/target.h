@@ -134,7 +134,7 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #define USE_UART4
 #define USE_UART5
 #undef USE_UART6
-#undef USE_UART7
+#define USE_UART7
 #undef USE_UART8
 
 #define USE_SERIALRX
@@ -159,7 +159,9 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #undef USE_TELEMETRY_LTM
 #undef USE_ADC
 #undef USE_VCP
-#undef USE_OSD
+#define USE_OSD
+#define USE_MSP_DISPLAYPORT
+#define USE_OSD_OVER_MSP_DISPLAYPORT
 #undef USE_RX_PPM
 #undef USE_RX_PWM
 #undef USE_SERIALRX_GHST
@@ -279,7 +281,7 @@ typedef struct
 	uint32_t speed;
 } USART_TypeDef;
 
-#define NUM_HEXAGON_UART 5
+#define NUM_HEXAGON_UART 6
 
 extern USART_TypeDef hexagon_uart[NUM_HEXAGON_UART];
 
@@ -294,15 +296,15 @@ extern USART_TypeDef hexagon_uart[NUM_HEXAGON_UART];
 
 #define UART4 ((USART_TypeDef *) &hexagon_uart[3])
 #define UART5 ((USART_TypeDef *) &hexagon_uart[4])
-#define UART7 ((USART_TypeDef *) NULL)
+#define UART7 ((USART_TypeDef *) &hexagon_uart[5])
 #define UART8 ((USART_TypeDef *) NULL)
 
-// TODO: OSD on USART2, port 6 on SLPI
 // USART1 reserved for ESC
 // TODO: Put RX on USART1 but map it to port 7 on SLPI
 #define SERIALRX_UART SERIAL_PORT_USART3
 #define MSP_UART SERIAL_PORT_UART4 // Virtual UART
 #define ESC_SENSOR_UART SERIAL_PORT_UART5 // Another virtual UART
+#define MSP_DISPLAYPORT_UART SERIAL_PORT_UART7
 
 #define SIMULATOR_MAX_RC_CHANNELS   16
 #define SIMULATOR_MAX_PWM_CHANNELS  16

@@ -142,6 +142,14 @@ const uartHardware_t uartHardware[UARTDEV_COUNT] = {
         .rxBuffer = uart1RxBuffer,
         .txBufferSize = sizeof(uart1TxBuffer),
         .rxBufferSize = sizeof(uart1RxBuffer),
+	},
+    {
+        .identifier = SERIAL_PORT_UART7,
+        .reg = UART7,
+        .txBuffer = uart1TxBuffer,
+        .rxBuffer = uart1RxBuffer,
+        .txBufferSize = sizeof(uart1TxBuffer),
+        .rxBufferSize = sizeof(uart1RxBuffer),
 	}
 };
 
@@ -164,6 +172,9 @@ uint32_t hexagonSerialTotalRxWaiting(const serialPort_t *instance) {
 	case SERIAL_PORT_UART4:
 		hw_index = 3;
 		break;
+	case SERIAL_PORT_UART7:
+		hw_index = 4;
+		break;
 	default:
 		printf("ERROR: Invalid port identifier");
 		break;
@@ -171,13 +182,15 @@ uint32_t hexagonSerialTotalRxWaiting(const serialPort_t *instance) {
 
 	uint32_t bytes_waiting = 0;
 
-	if ((hw_index > -1) && (hw_index < 4)) {
+	if ((hw_index > -1) && (hw_index < 5)) {
 		if (hw_index == 3) {
 			// Virtual port
 			pthread_mutex_lock(&_lock);
 			bytes_waiting = _rx_write - _rx_read;
 			pthread_mutex_unlock(&_lock);
 			// printf("%lu total bytes waiting on virtual serial port to read", bytes_waiting);
+		} else if (hw_index == 4) {
+			// printf("Checking RX bytes waiting for OSD serial port");
 		} else {
 			(void) sl_client_uart_rx_available(uartHardware[hw_index].reg->fd, &bytes_waiting);
 		}
@@ -207,6 +220,9 @@ uint8_t hexagonSerialRead(serialPort_t *instance) {
 	case SERIAL_PORT_UART4:
 		hw_index = 3;
 		break;
+	case SERIAL_PORT_UART7:
+		hw_index = 4;
+		break;
 	default:
 		printf("ERROR: Invalid port identifier");
 		break;
@@ -214,7 +230,7 @@ uint8_t hexagonSerialRead(serialPort_t *instance) {
 
 	uint8_t byte_data = 0;
 
-	if ((hw_index > -1) && (hw_index < 4)) {
+	if ((hw_index > -1) && (hw_index < 5)) {
 		if (hw_index == 3) {
 			// Virtual port
 			pthread_mutex_lock(&_lock);
@@ -228,6 +244,8 @@ uint8_t hexagonSerialRead(serialPort_t *instance) {
 			}
 			pthread_mutex_unlock(&_lock);
 			// printf("Reading a byte from virtual serial port buffer");
+		} else if (hw_index == 4) {
+			printf("Trying to read on OSD MSP port");
 		} else {
 			(void) sl_client_uart_read(uartHardware[hw_index].reg->fd, (char*) &byte_data, 1);
 		}
@@ -248,6 +266,73 @@ uint32_t hexagonSerialTotalTxFree(const serialPort_t *instance) {
 	return 255;
 }
 
+static int osdPacketBufferIndex = 0;
+static uint8_t osdPacketBuffer[256];
+static int osdTxBufferIndex = 0;
+static uint8_t osdTxBuffer[4096];
+static bool osdFlush = false;
+static pthread_mutex_t osd_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static int mspTxBufferIndex = 0;
+static uint8_t mspTxBuffer[4096];
+static bool mspFlush = false;
+static pthread_mutex_t msp_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static bool tx_thread_started = false;
+
+void *tx_thread(void *arg)
+{
+	(void) arg;
+
+	while (true) {
+		if (osdFlush) {
+			if (osdTxBufferIndex == 1) printf("OSD sending. %d bytes", osdTxBufferIndex);
+			pthread_mutex_lock(&osd_mutex);
+			(void) sl_client_send_data(osdTxBuffer, osdTxBufferIndex);
+			osdFlush = false;
+			osdTxBufferIndex = 1;
+			pthread_mutex_unlock(&osd_mutex);
+		}
+
+		if (mspFlush) {
+			// printf("MSP sending. %d bytes", mspTxBufferIndex);
+			pthread_mutex_lock(&msp_mutex);
+			(void) sl_client_send_data(mspTxBuffer, mspTxBufferIndex);
+			mspFlush = false;
+			mspTxBufferIndex = 1;
+			pthread_mutex_unlock(&msp_mutex);
+		}
+
+		// Send virtual port updates no faster than every 1ms
+		delayMicroseconds(1000);
+	}
+
+    return NULL;
+}
+
+void hexagonStartBuf(serialPort_t *instance) {
+	(void) instance;
+	// printf("hexagonStartBuf");
+}
+
+void hexagonEndBuf(serialPort_t *instance) {
+	serialPortIdentifier_e port_number = instance->identifier;
+
+	if (port_number == SERIAL_PORT_UART7) {
+		if (osdTxBufferIndex + osdPacketBufferIndex > 4096) {
+			printf("ERROR: OSD transmit buffer overflow");
+		} else {
+			// printf("Copying %d bytes into osdTxBuffer", osdPacketBufferIndex);
+			pthread_mutex_lock(&osd_mutex);
+			memcpy(&osdTxBuffer[osdTxBufferIndex], osdPacketBuffer, osdPacketBufferIndex);
+			osdTxBufferIndex += osdPacketBufferIndex;
+			osdFlush = true;
+			pthread_mutex_unlock(&osd_mutex);
+		}
+		osdPacketBufferIndex = 0;
+	}
+}
+
 void hexagonWriteBuf(serialPort_t *instance, const void *data, int count) {
 	serialPortIdentifier_e port_number = instance->identifier;
 
@@ -266,17 +351,32 @@ void hexagonWriteBuf(serialPort_t *instance, const void *data, int count) {
 	case SERIAL_PORT_UART4:
 		hw_index = 3;
 		break;
+	case SERIAL_PORT_UART7:
+		hw_index = 4;
+		break;
 	default:
 		printf("ERROR: Invalid port identifier");
 		break;
 	}
 
-	// printf("Sending %d bytes in hexagonWriteBuf", count);
-
-	if ((hw_index > -1) && (hw_index < 4)) {
+	if ((hw_index > -1) && (hw_index < 5)) {
 		if (hw_index == 3) {
-			// Virtual port
-			(void) sl_client_send_data(data, count);
+			if (mspTxBufferIndex + count > 4096) {
+				printf("ERROR: MSP tx buffer overflow");
+			} else {
+				pthread_mutex_lock(&msp_mutex);
+				memcpy(&mspTxBuffer[mspTxBufferIndex], data, count);
+				mspTxBufferIndex += count;
+				mspFlush = true;
+				pthread_mutex_unlock(&msp_mutex);
+			}
+		} else if (hw_index == 4) {
+			if (osdPacketBufferIndex + count > 256) {
+				printf("ERROR: OSD packet buffer overflow");
+			} else {
+				memcpy(&osdPacketBuffer[osdPacketBufferIndex], data, count);
+				osdPacketBufferIndex += count;
+			}
 		} else {
 			(void) sl_client_uart_write(uartHardware[hw_index].reg->fd, (const char*) data, (const unsigned) count);
 		}
@@ -308,8 +408,8 @@ static struct serialPortVTable hexagon_uart_vtable = {
 	.setCtrlLineStateCb = NULL,
 	.setBaudRateCb = NULL,
 	.writeBuf = hexagonWriteBuf,
-	.beginWrite = NULL,
-	.endWrite = NULL
+	.beginWrite = hexagonStartBuf,
+	.endWrite = hexagonEndBuf
 };
 
 uartPort_t *serialUART(uartDevice_t *uartdev, uint32_t baudRate, portMode_e mode, portOptions_e options)
@@ -347,6 +447,10 @@ uartPort_t *serialUART(uartDevice_t *uartdev, uint32_t baudRate, portMode_e mode
 		sl_port_number = 9;
 		hw_index = 4;
 		break;
+	case SERIAL_PORT_UART7:
+		sl_port_number = 10;
+		hw_index = 5;
+		break;
 	default:
 		printf("ERROR: Invalid port identifier");
 		break;
@@ -361,6 +465,10 @@ uartPort_t *serialUART(uartDevice_t *uartdev, uint32_t baudRate, portMode_e mode
 			printf("Configuring ESC sensor virtual port");
 
 		    uartHardware[hw_index].reg->fd = 4;
+		} else if (port_number == SERIAL_PORT_UART7) {
+			printf("Configuring OSD virtual display port");
+
+		    uartHardware[hw_index].reg->fd = 5;
 		} else {
 			int fd = sl_client_config_uart(sl_port_number, baudRate);
 
@@ -399,8 +507,32 @@ void uartReconfigure(uartPort_t *uartPort)
 	if (fd < 3) {
     	(void) sl_client_register_uart_callback(fd, uartPort->port.rxCallback, uartPort->port.rxCallbackData);
 	} else if (fd == 4) {
+		mspTxBuffer[0] = 0x5A;
+		mspTxBufferIndex = 1;
 		// For ESC telemetry
 		registerTelemCallback(uartPort->port.rxCallback);
+	} else if (fd == 5) {
+		if (!tx_thread_started) {
+			osdTxBuffer[0] = 0xA5;
+			osdTxBufferIndex = 1;
+
+		    int osd_tx_priority = 128;
+		    // int osd_tx_priority = sched_get_priority_max(SCHED_FIFO) - 1;
+		    printf("Setting OSD Tx pthread priority to %d", osd_tx_priority);
+
+		    struct sched_param param = { .sched_priority = osd_tx_priority };
+		    pthread_attr_t attr;
+		    pthread_attr_init(&attr);
+		    pthread_attr_setschedparam(&attr, &param);
+			
+		    const uint32_t stack_size = 4096U;
+		    pthread_attr_setstacksize(&attr, stack_size);
+			
+			pthread_t ctx = 0;
+		    pthread_create(&ctx, &attr, &tx_thread, NULL);
+		    pthread_attr_destroy(&attr);
+			tx_thread_started = true;
+		}
 	}
 }
 
