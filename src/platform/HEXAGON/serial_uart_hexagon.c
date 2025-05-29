@@ -150,6 +150,14 @@ const uartHardware_t uartHardware[UARTDEV_COUNT] = {
         .rxBuffer = uart1RxBuffer,
         .txBufferSize = sizeof(uart1TxBuffer),
         .rxBufferSize = sizeof(uart1RxBuffer),
+	},
+    {
+        .identifier = SERIAL_PORT_UART8,
+        .reg = UART8,
+        .txBuffer = uart1TxBuffer,
+        .rxBuffer = uart1RxBuffer,
+        .txBufferSize = sizeof(uart1TxBuffer),
+        .rxBufferSize = sizeof(uart1RxBuffer),
 	}
 };
 
@@ -175,6 +183,9 @@ uint32_t hexagonSerialTotalRxWaiting(const serialPort_t *instance) {
 	case SERIAL_PORT_UART7:
 		hw_index = 4;
 		break;
+	case SERIAL_PORT_UART8:
+		hw_index = 5;
+		break;
 	default:
 		printf("ERROR: Invalid port identifier");
 		break;
@@ -189,7 +200,7 @@ uint32_t hexagonSerialTotalRxWaiting(const serialPort_t *instance) {
 			bytes_waiting = _rx_write - _rx_read;
 			pthread_mutex_unlock(&_lock);
 			// printf("%lu total bytes waiting on virtual serial port to read", bytes_waiting);
-		} else if (hw_index == 4) {
+		} else if ((hw_index == 4) || (hw_index == 5)) {
 			// printf("Checking RX bytes waiting for OSD serial port");
 		} else {
 			(void) sl_client_uart_rx_available(uartHardware[hw_index].reg->fd, &bytes_waiting);
@@ -223,6 +234,9 @@ uint8_t hexagonSerialRead(serialPort_t *instance) {
 	case SERIAL_PORT_UART7:
 		hw_index = 4;
 		break;
+	case SERIAL_PORT_UART8:
+		hw_index = 4;
+		break;
 	default:
 		printf("ERROR: Invalid port identifier");
 		break;
@@ -246,6 +260,8 @@ uint8_t hexagonSerialRead(serialPort_t *instance) {
 			// printf("Reading a byte from virtual serial port buffer");
 		} else if (hw_index == 4) {
 			printf("Trying to read on OSD MSP port");
+		} else if (hw_index == 5) {
+			printf("Trying to read on Blackbox port");
 		} else {
 			(void) sl_client_uart_read(uartHardware[hw_index].reg->fd, (char*) &byte_data, 1);
 		}
@@ -354,6 +370,9 @@ void hexagonWriteBuf(serialPort_t *instance, const void *data, int count) {
 	case SERIAL_PORT_UART7:
 		hw_index = 4;
 		break;
+	case SERIAL_PORT_UART8:
+		hw_index = 5;
+		break;
 	default:
 		printf("ERROR: Invalid port identifier");
 		break;
@@ -377,11 +396,23 @@ void hexagonWriteBuf(serialPort_t *instance, const void *data, int count) {
 				memcpy(&osdPacketBuffer[osdPacketBufferIndex], data, count);
 				osdPacketBufferIndex += count;
 			}
+		} else if (hw_index == 5) {
+			printf("Writing %u bytes to Blackbox", count);
 		} else {
 			(void) sl_client_uart_write(uartHardware[hw_index].reg->fd, (const char*) data, (const unsigned) count);
 		}
 	} else {
 		printf("ERROR: Invalid port number %u", port_number);
+	}
+}
+
+void hexagonSerialWrite(serialPort_t *instance, uint8_t ch) {
+	(void) ch;
+
+	serialPortIdentifier_e port_number = instance->identifier;
+
+	if (port_number != SERIAL_PORT_UART8) {
+		printf("Port %u not supported in hexagonSerialWrite", port_number);
 	}
 }
 
@@ -398,7 +429,7 @@ static struct serialPortVTable hexagon_uart_vtable = {
     // void (*writeBuf)(serialPort_t *instance, const void *data, int count);
     // void (*beginWrite)(serialPort_t *instance);
     // void (*endWrite)(serialPort_t *instance);
-	.serialWrite = NULL,
+	.serialWrite = hexagonSerialWrite,
 	.serialTotalRxWaiting = hexagonSerialTotalRxWaiting,
 	.serialTotalTxFree = hexagonSerialTotalTxFree,
 	.serialRead = hexagonSerialRead,
@@ -451,6 +482,10 @@ uartPort_t *serialUART(uartDevice_t *uartdev, uint32_t baudRate, portMode_e mode
 		sl_port_number = 10;
 		hw_index = 5;
 		break;
+	case SERIAL_PORT_UART8:
+		sl_port_number = 11;
+		hw_index = 6;
+		break;
 	default:
 		printf("ERROR: Invalid port identifier");
 		break;
@@ -469,6 +504,10 @@ uartPort_t *serialUART(uartDevice_t *uartdev, uint32_t baudRate, portMode_e mode
 			printf("Configuring OSD virtual display port");
 
 		    uartHardware[hw_index].reg->fd = 5;
+		} else if (port_number == SERIAL_PORT_UART8) {
+			printf("Configuring Blackbox virtual port");
+
+		    uartHardware[hw_index].reg->fd = 6;
 		} else {
 			int fd = sl_client_config_uart(sl_port_number, baudRate);
 
@@ -512,6 +551,7 @@ void uartReconfigure(uartPort_t *uartPort)
 		// For ESC telemetry
 		registerTelemCallback(uartPort->port.rxCallback);
 	} else if (fd == 5) {
+		// TODO: Perhaps move this init to somewhere else?
 		if (!tx_thread_started) {
 			osdTxBuffer[0] = 0xA5;
 			osdTxBufferIndex = 1;

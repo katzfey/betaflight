@@ -135,7 +135,7 @@ extern size_t strnlen(const char s[], size_t maxlen);
 #define USE_UART5
 #undef USE_UART6
 #define USE_UART7
-#undef USE_UART8
+#define USE_UART8
 
 #define USE_SERIALRX
 #define USE_SERIALRX_CRSF
@@ -281,7 +281,7 @@ typedef struct
 	uint32_t speed;
 } USART_TypeDef;
 
-#define NUM_HEXAGON_UART 6
+#define NUM_HEXAGON_UART 7
 
 extern USART_TypeDef hexagon_uart[NUM_HEXAGON_UART];
 
@@ -297,7 +297,7 @@ extern USART_TypeDef hexagon_uart[NUM_HEXAGON_UART];
 #define UART4 ((USART_TypeDef *) &hexagon_uart[3])
 #define UART5 ((USART_TypeDef *) &hexagon_uart[4])
 #define UART7 ((USART_TypeDef *) &hexagon_uart[5])
-#define UART8 ((USART_TypeDef *) NULL)
+#define UART8 ((USART_TypeDef *) &hexagon_uart[6])
 
 // USART1 reserved for ESC
 // TODO: Put RX on USART1 but map it to port 7 on SLPI
