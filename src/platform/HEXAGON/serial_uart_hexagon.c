@@ -47,6 +47,12 @@
 
 #include "sl_client.h"
 
+#define MAX_LOG_BUFFERS 10
+#define MAX_LOG_BUFFER_SIZE 1024
+uint8_t log_buffers[MAX_LOG_BUFFERS][MAX_LOG_BUFFER_SIZE];
+int log_buffer;
+int log_buffer_index;
+
 // Called by the SLPI LINK server when there is a new message for us from host side
 int slpi_link_client_receive(const uint8_t *data, int data_len_in_bytes) __attribute__ ((visibility ("default")));
 
@@ -407,12 +413,20 @@ void hexagonWriteBuf(serialPort_t *instance, const void *data, int count) {
 }
 
 void hexagonSerialWrite(serialPort_t *instance, uint8_t ch) {
-	(void) ch;
+	extern char full_log_path[];
 
 	serialPortIdentifier_e port_number = instance->identifier;
 
-	if (port_number != SERIAL_PORT_UART8) {
-		printf("Port %u not supported in hexagonSerialWrite", port_number);
+	if (port_number == SERIAL_PORT_UART8) {
+		if (log_buffer_index == MAX_LOG_BUFFER_SIZE) {
+			log_buffer_index = 0;
+			log_buffer++;
+			if (log_buffer == MAX_LOG_BUFFERS) log_buffer = 0;
+		}
+		log_buffers[log_buffer][log_buffer_index] = ch;
+		log_buffer_index++;
+	} else {
+		printf("ERROR: Port %u not supported in hexagonSerialWrite", port_number);
 	}
 }
 

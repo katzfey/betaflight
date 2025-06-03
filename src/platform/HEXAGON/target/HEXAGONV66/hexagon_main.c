@@ -1,10 +1,16 @@
 #include <stdio.h>
+#include <sys/stat.h>
 #include <stdint.h>
 #include <pthread.h>
 
 #include "platform.h"
 // #include "io/serial.h"
 // #include "common/printf_serial.h"
+
+// Binary log file support
+static const char dir_path[] = "/data/betaflight";
+static const char logfile[] = "log.bin";
+char full_log_path[128];
 
 extern void HAP_debug(const char *msg, int level, const char *filename, int line);
 
@@ -49,6 +55,27 @@ void *main_thread_trampoline(void *arg)
 
 int slpi_link_client_init(void)
 {
+	// Setup the logging directory and the log file
+	full_log_path[0] = 0;
+	struct stat statbuf;
+    if (stat(dir_path, &statbuf) == 0) {
+		if (S_ISDIR(statbuf.st_mode)) {
+			strcpy(full_log_path, dir_path);
+			strcat(full_log_path, "/");
+			strcat(full_log_path, logfile);
+    		HAP_printf("Setting up log file %s", full_log_path);
+		    FILE *fp = fopen(full_log_path, "wb"); // Open the file in binary write mode
+		    if (fp == NULL) {
+    			HAP_printf("Error opening the log file");
+				full_log_path[0] = 0;
+		    } else {
+		    	fclose(fp); // Close the file
+			}
+		} else {
+    		HAP_printf("ERROR: %s exists but is not a directory", dir_path);
+		}
+    }
+
     // HAP_printf("About to call betaflight_main");
     int betaflight_thread_priority = sched_get_priority_max(SCHED_FIFO) - 20;
     HAP_printf("Setting pthread priority to %d", betaflight_thread_priority);
