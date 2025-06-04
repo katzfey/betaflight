@@ -52,6 +52,8 @@
 uint8_t log_buffers[MAX_LOG_BUFFERS][MAX_LOG_BUFFER_SIZE];
 int log_buffer;
 int log_buffer_index;
+int log_write_buffer;
+int log_write_buffer_index;
 
 // Called by the SLPI LINK server when there is a new message for us from host side
 int slpi_link_client_receive(const uint8_t *data, int data_len_in_bytes) __attribute__ ((visibility ("default")));
@@ -307,6 +309,7 @@ void *tx_thread(void *arg)
 	(void) arg;
 
 	while (true) {
+		// Handle OSD processing
 		if (osdFlush) {
 			if (osdTxBufferIndex == 1) printf("OSD sending. %d bytes", osdTxBufferIndex);
 			pthread_mutex_lock(&osd_mutex);
@@ -316,6 +319,7 @@ void *tx_thread(void *arg)
 			pthread_mutex_unlock(&osd_mutex);
 		}
 
+		// Handle MSP processing for betaflight configurator connection
 		if (mspFlush) {
 			// printf("MSP sending. %d bytes", mspTxBufferIndex);
 			pthread_mutex_lock(&msp_mutex);
@@ -323,6 +327,27 @@ void *tx_thread(void *arg)
 			mspFlush = false;
 			mspTxBufferIndex = 1;
 			pthread_mutex_unlock(&msp_mutex);
+		}
+
+		// Handle log data processing. Flush data to file as needed
+		extern char full_log_path[];
+
+		// TODO: Also consider the case where the buffer is only partially written
+		//       when the drone is disarmed. Could attempt to recover that as well
+		if ((full_log_path[0] != 0) && (log_buffer != log_write_buffer)) {
+			while (log_buffer != log_write_buffer) {
+				// printf("Writing buffer %d", log_write_buffer);
+			    FILE *fp = fopen(full_log_path, "ab"); // Open the file in binary append mode
+			    if (fp == NULL) {
+	    			printf("Error opening the log file in write thread");
+					full_log_path[0] = 0;
+			    } else {
+					fwrite(log_buffers[log_write_buffer], 1, MAX_LOG_BUFFER_SIZE, fp);
+			    	fclose(fp); // Close the file to make sure it is flushed
+				}
+				log_write_buffer++;
+				if (log_write_buffer == MAX_LOG_BUFFERS) log_write_buffer = 0;
+			}
 		}
 
 		// Send virtual port updates no faster than every 1ms
@@ -413,8 +438,6 @@ void hexagonWriteBuf(serialPort_t *instance, const void *data, int count) {
 }
 
 void hexagonSerialWrite(serialPort_t *instance, uint8_t ch) {
-	extern char full_log_path[];
-
 	serialPortIdentifier_e port_number = instance->identifier;
 
 	if (port_number == SERIAL_PORT_UART8) {
