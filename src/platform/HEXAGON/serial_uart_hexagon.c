@@ -27,6 +27,7 @@
 */
 
 #include <stdio.h>
+#include <sys/stat.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <pthread.h>
@@ -47,17 +48,23 @@
 
 #include "sl_client.h"
 
+// Blackbox binary log file support
 #define MAX_LOG_BUFFERS 10
 #define MAX_LOG_BUFFER_SIZE 1024
-uint8_t log_buffers[MAX_LOG_BUFFERS][MAX_LOG_BUFFER_SIZE];
-int log_buffer;
-int log_buffer_index;
-int log_write_buffer;
-int log_write_buffer_index;
+static uint8_t log_buffers[MAX_LOG_BUFFERS][MAX_LOG_BUFFER_SIZE];
+static int log_buffer;
+static int log_buffer_index;
+static int log_write_buffer;
+static bool logging_initialized;
+static bool log_data_received;
+static const char dir_path[] = "/data/betaflight";
+static const char logfile[] = "log.bin";
+static char full_log_path[128];
 
 // Called by the SLPI LINK server when there is a new message for us from host side
 int slpi_link_client_receive(const uint8_t *data, int data_len_in_bytes) __attribute__ ((visibility ("default")));
 
+// Receive buffer support for MSP data coming from betaflight configurator
 #define VIRTUAL_RX_BUFFER_LEN 1024
 static uint8_t virtual_rx_buffer[VIRTUAL_RX_BUFFER_LEN];
 static uint32_t _rx_write = 0;
@@ -330,7 +337,31 @@ void *tx_thread(void *arg)
 		}
 
 		// Handle log data processing. Flush data to file as needed
-		extern char full_log_path[];
+
+		// Setup the logging directory and the log file once we start
+		// receiving log data
+		if ((!logging_initialized) && (log_data_received)){
+			full_log_path[0] = 0;
+			struct stat statbuf;
+		    if (stat(dir_path, &statbuf) == 0) {
+				if (S_ISDIR(statbuf.st_mode)) {
+					strcpy(full_log_path, dir_path);
+					strcat(full_log_path, "/");
+					strcat(full_log_path, logfile);
+		    		printf("Setting up log file %s", full_log_path);
+				    FILE *fp = fopen(full_log_path, "wb"); // Open the file in binary write mode
+				    if (fp == NULL) {
+		    			printf("Error opening the log file");
+						full_log_path[0] = 0;
+				    } else {
+				    	fclose(fp); // Close the file
+					}
+				} else {
+		    		printf("ERROR: %s exists but is not a directory", dir_path);
+				}
+		    }
+			logging_initialized = true;
+		}
 
 		// TODO: Also consider the case where the buffer is only partially written
 		//       when the drone is disarmed. Could attempt to recover that as well
@@ -441,6 +472,7 @@ void hexagonSerialWrite(serialPort_t *instance, uint8_t ch) {
 	serialPortIdentifier_e port_number = instance->identifier;
 
 	if (port_number == SERIAL_PORT_UART8) {
+		log_data_received = true;
 		if (log_buffer_index == MAX_LOG_BUFFER_SIZE) {
 			log_buffer_index = 0;
 			log_buffer++;
