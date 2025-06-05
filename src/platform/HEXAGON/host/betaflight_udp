@@ -8,30 +8,20 @@ from ctypes import *
 import socket
 import threading
 
-def receive_data():
-    global server_connection
+def receive_data(sock):
+    global remote_addr
     while True:
-        if server_connection:
-            try:
-                data = server_connection.recv(1024)  # Buffer size is 1024 bytes
-                if data:
-                    print(f"Received {len(data)} bytes from socket")
-                    betaflight.slpi_link_send(data, c_ulong(len(data)))
-                else:
-                    server_connection.close()
-                    server_connection = None
-            except Exception as e:
-                print(f"Error receiving data: {e}")
-                break
-        else:
-            try:
-                time.sleep(0.1)
-            except:
-                print(f"Time sleep failed")
+        try:
+            data, remote_addr = sock.recvfrom(1024)  # Buffer size is 1024 bytes
+            print(f"Received {len(data)} bytes from {remote_addr}")
+            betaflight.slpi_link_send(data, c_ulong(len(data)))
+        except Exception as e:
+            print(f"Error receiving data: {e}")
+            break
 
 
 def py_cb_func(data, len):
-    global server_connection
+    global remote_addr
     global pipe
     global pipe_open
 
@@ -44,14 +34,10 @@ def py_cb_func(data, len):
         for i in range(1,len):
             binary_data[i-1] = data_array[i]
 
-        print(f"Sending {len - 1} bytes to socket")
+        # print(f"Sending {len - 1} bytes to {remote_addr}")
         # print(binary_data)
 
-        if server_connection:
-            try:
-                server_connection.sendall(binary_data)
-            except:
-                print("Socket sendall failed")
+        sock.sendto(binary_data, remote_addr)
     elif data_array[0] == 0xA5:
         # print("Got OSD data packet: " + str(len) + " bytes")
         if pipe_open:
@@ -81,7 +67,7 @@ def check_named_pipe_existence(pipe_path):
 
 #### MAIN ####
 
-server_connection = None
+remote_addr = ''
 
 pipe_path = "/tmp/osd_pipe"
 pipe_open = False
@@ -105,32 +91,25 @@ result = betaflight.slpi_link_init(False, cb_func, b'betaflight.so')
 
 print('slpi_link_init returned: ' + str(result))
 
-# Create a TCP server socket
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# Create a UDP socket
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # Bind the socket to the address and port
 server_address = ('', 8765) # '' means any available interface
-server_socket.bind(server_address)
-server_socket.listen()
+sock.bind(server_address)
 
-receive_thread = threading.Thread(target=receive_data, daemon=True)
+receive_thread = threading.Thread(target=receive_data, args=(sock,), daemon=True)
 receive_thread.start()
 
 while True:
-    print(f"Waiting for socket connection")
     try:
-        server_connection, addr = server_socket.accept()
-        print(f"Accepted socket connection from {addr}")
+        time.sleep(0.2)
     except:
-        print('Got unknown exception from accept')
+        print('Got unknown exception')
         break
-    while server_connection:
-        try:
-            time.sleep(0.5)
-        except:
-            print('Got unknown exception from accept')
-            break
 
-# Reset SLPI
+sock.close()
+
+# void slpi_link_reset(void);
 betaflight.slpi_link_reset(None)
 
