@@ -1,6 +1,15 @@
 #!/usr/bin/env python
 
-"""Echo server using the asyncio API."""
+"""
+Bridges between websocket connection from betaflight configurator to
+the betaflight tcp socket to exchange MSP data over adb.
+1. betaflight on target uses port 8765
+2. On host, use 'adb forward tcp:8766 tcp:8765' to forward local port 8766
+   to port 8765 on target.
+3. This script will attempt to connect to local port 8766 and present port 8767
+   for the websocket to be connected to by betaflight configurator
+4. In betaflight configurator, attempt connection to ws://localhost:8767
+"""
 
 import sys
 import socket
@@ -65,8 +74,8 @@ async def main():
 
     asyncio.create_task(receive_data())
 
-    async with websockets.serve(handle_client, "localhost", 8766, subprotocols = ["binary", "wsSerial"]):
-        print("WebSocket server started at ws://localhost:8766")
+    async with websockets.serve(handle_client, "localhost", 8767, subprotocols = ["binary", "wsSerial"]):
+        print("WebSocket server started at ws://localhost:8767")
         await asyncio.Future()  # Run forever
 
 
