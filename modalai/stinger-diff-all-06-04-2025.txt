@@ -3,7 +3,7 @@
 # diff all
 
 # version
-# Betaflight / HEXAGONV66 (HEXAGON) 4.6.0 May 29 2025 / 23:44:54 (norevision) MSP API: 1.47
+# Betaflight / HEXAGONV66 (HEXAGON) 4.6.0 Jun  4 2025 / 17:39:02 (norevision) MSP API: 1.47
 
 # start the command batch
 batch start
@@ -23,11 +23,14 @@ serial UART8 128 1000000 57600 0 2470000
 
 # aux
 aux 0 0 0 1850 2050 0 0
+aux 1 1 1 950 2025 0 0
 
 # master
-set acc_calibration = 61,7,-4059,1
+set acc_calibration = -68,3,-39,1
 set blackbox_sample_rate = 1/1
 set blackbox_device = SERIAL
+set motor_idle = 300
+set align_board_pitch = 180
 set current_meter = ESC
 set battery_meter = ESC
 set osd_vbat_pos = 18816
