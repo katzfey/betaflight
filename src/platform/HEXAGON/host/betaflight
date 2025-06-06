@@ -29,11 +29,16 @@ def receive_data():
             except:
                 print(f"Time sleep failed")
 
+def bytearray_to_const_void_ptr(data: bytearray) -> c_void_p:
+    """Converts a bytearray to a ctypes const void pointer."""
+    arr = (c_ubyte * len(data)).from_buffer(data)
+    ptr = cast(addressof(arr), c_void_p)
+
+    return ptr
 
 def py_cb_func(data, len):
     global server_connection
-    global pipe
-    global pipe_open
+    global pympa
 
     # print('Got data callback')
 
@@ -53,44 +58,40 @@ def py_cb_func(data, len):
             except:
                 print("Socket sendall failed")
     elif data_array[0] == 0xA5:
-        # print("Got OSD data packet: " + str(len) + " bytes")
-        if pipe_open:
-            binary_data = bytearray(len-1)
-            for i in range(1,len):
-                binary_data[i-1] = data_array[i]
-            pipe.write(binary_data)
-            pipe.flush() # Ensure data is sent immediately
+        print("Got OSD data packet: " + str(len) + " bytes")
+        binary_data = bytearray(len-1)
+        for i in range(1,len):
+            binary_data[i-1] = data_array[i]
+        pympa.pipe_server_write(0, bytearray_to_const_void_ptr(binary_data), len-1);
     else:
         print("Got unknown data packet" + str(data_array[0]))
-
-def check_named_pipe_existence(pipe_path):
-    """
-    Checks if a named pipe exists at the given path.
-
-    Args:
-        pipe_path: The path to the named pipe.
-
-    Returns:
-        True if the named pipe exists, False otherwise.
-    """
-    try:
-        mode = os.stat(pipe_path).st_mode
-        return stat.S_ISFIFO(mode)
-    except FileNotFoundError:
-        return False
 
 #### MAIN ####
 
 server_connection = None
 
-pipe_path = "/tmp/osd_pipe"
-pipe_open = False
-if check_named_pipe_existence(pipe_path):
-    try:
-        pipe = open(pipe_path, 'wb')
-        pipe_open = True
-    except:
-        pass
+# Set up OSD MPA server pipe
+pympa = CDLL("libmodal_pipe.so")
+
+class PIPE_INFO(Structure):
+    _fields_ = [("name", c_char * 32),
+                ("location", c_char * 64),
+                ("type", c_char * 32),
+                ("server_name", c_char * 32),
+                ("size_bytes", c_int),
+                ("server_pid", c_int)]
+
+info = PIPE_INFO()
+info.name = b'msp_osd'
+info.type = b'msp_dp_cmd_t'
+info.server_name = b'betaflight'
+info.size_bytes = 4096
+info.server_pid = 0
+
+success = pympa.pipe_server_create(0, info, 0);
+if success == -1:
+    print('ERROR: Could not create OSD MPA server pipe')
+    sys.exit(-1)
 
 betaflight = CDLL('libslpi_link.so.1')
 
@@ -130,6 +131,12 @@ while True:
         except:
             print('Got unknown exception from accept')
             break
+
+print('Exiting...')
+
+# Close OSD MSP pipe
+# pympa_close_pub(mpa_channel)
+pympa.pipe_server_close(0)
 
 # Reset SLPI
 betaflight.slpi_link_reset(None)
