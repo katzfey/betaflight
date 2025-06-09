@@ -321,8 +321,8 @@ void *tx_thread(void *arg)
 		// Handle reset
 		if (_reset) {
 			delayMicroseconds(10000);
-			// uint8_t resetCmd[1] = { 0x42 };
-			// (void) sl_client_send_data(resetCmd, 1);
+			uint8_t resetCmd[1] = { 0x42 };
+			(void) sl_client_send_data(resetCmd, 1);
 		}
 
 		// Handle OSD processing
