@@ -18,6 +18,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -356,10 +357,13 @@ static void mspRebootFn(serialPort_t *serialPort)
 {
     UNUSED(serialPort);
 
+	printf("In mspRebootFn. rebootMode %u", rebootMode);
+
     motorShutdown();
 
     switch (rebootMode) {
     case MSP_REBOOT_FIRMWARE:
+		printf("mspRebootFn MSP_REBOOT_FIRMWARE");
         systemReset();
 
         break;
@@ -2356,6 +2360,7 @@ static mspResult_e mspFcProcessOutCommandWithArg(mspDescriptor_t srcDesc, int16_
         }
         break;
     case MSP_REBOOT:
+		printf("Got MSP_REBOOT");
         if (sbufBytesRemaining(src)) {
             rebootMode = sbufReadU8(src);
 
@@ -2559,6 +2564,7 @@ static mspResult_e mspFcProcessOutCommandWithArg(mspDescriptor_t srcDesc, int16_
 
     case MSP_RESET_CONF:
         {
+			printf("Got MSP_RESET_CONF");
             if (sbufBytesRemaining(src) >= 1) {
                 // Added in MSP API 1.42
                 sbufReadU8(src);

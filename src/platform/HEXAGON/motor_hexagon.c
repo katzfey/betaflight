@@ -363,6 +363,10 @@ void hexagonRequestTelemetry(unsigned index) {
 	}
 }
 
+void hexagonMotorShutdown() {
+	return;
+}
+
 static const motorVTable_t vTable = {
     .postInit = NULL,
     .convertExternalToMotor = hexagonConvertExternalToMotor,
@@ -374,7 +378,7 @@ static const motorVTable_t vTable = {
     .write = hexagonMotorWrite,
     .writeInt = NULL,
     .updateComplete = hexagonMotorUpdateComplete,
-    .shutdown = NULL,
+    .shutdown = hexagonMotorShutdown,
     .requestTelemetry = hexagonRequestTelemetry,
     .isMotorIdle = NULL,
     .getMotorIO = NULL,

@@ -297,6 +297,8 @@ uint32_t hexagonSerialTotalTxFree(const serialPort_t *instance) {
 	return 255;
 }
 
+static bool _reset = false;
+
 static int osdPacketBufferIndex = 0;
 static uint8_t osdPacketBuffer[256];
 static int osdTxBufferIndex = 0;
@@ -316,6 +318,13 @@ void *tx_thread(void *arg)
 	(void) arg;
 
 	while (true) {
+		// Handle reset
+		if (_reset) {
+			delayMicroseconds(10000);
+			// uint8_t resetCmd[1] = { 0x42 };
+			// (void) sl_client_send_data(resetCmd, 1);
+		}
+
 		// Handle OSD processing
 		if (osdFlush) {
 			if (osdTxBufferIndex == 1) printf("OSD sending. %d bytes", osdTxBufferIndex);
@@ -386,6 +395,10 @@ void *tx_thread(void *arg)
 	}
 
     return NULL;
+}
+
+void hexagonReset() {
+	_reset = true;
 }
 
 void hexagonStartBuf(serialPort_t *instance) {

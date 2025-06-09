@@ -8,15 +8,19 @@ from ctypes import *
 import socket
 import threading
 
+rebooting = False
+
 def receive_data():
     global server_connection
+    global rebooting
     while True:
         if server_connection:
             try:
                 data = server_connection.recv(1024)  # Buffer size is 1024 bytes
                 if data:
                     print(f"Received {len(data)} bytes from socket")
-                    betaflight.slpi_link_send(data, c_ulong(len(data)))
+                    if not rebooting:
+                        betaflight.slpi_link_send(data, c_ulong(len(data)))
                 else:
                     server_connection.close()
                     server_connection = None
@@ -38,7 +42,10 @@ def bytearray_to_const_void_ptr(data: bytearray) -> c_void_p:
 
 def py_cb_func(data, len):
     global server_connection
+    global rebooting
     global pympa
+    global betaflight
+    global cb_func
 
     # print('Got data callback')
 
@@ -63,6 +70,19 @@ def py_cb_func(data, len):
         for i in range(1,len):
             binary_data[i-1] = data_array[i]
         pympa.pipe_server_write(0, bytearray_to_const_void_ptr(binary_data), len-1);
+    elif data_array[0] == 0x42:
+        print('Got reboot command')
+        rebooting = True
+        # Reset SLPI
+        betaflight.slpi_link_reset(None)
+        # Wait for SLPI to reboot
+        time.sleep(4)
+        # print('Calling slpi_link_init')
+        # result = betaflight.slpi_link_init(False, cb_func, b'betaflight.so')
+        # print('slpi_link_init returned: ' + str(result))
+        # rebooting = False
+        # Specify non-zero error code so systemd will restart everything
+        sys.exit(-1)
     else:
         print("Got unknown data packet" + str(data_array[0]))
 
