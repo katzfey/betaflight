@@ -18,7 +18,6 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -3582,7 +3581,6 @@ static char *checkCommand(char *cmdline, const char *command)
 
 static void cliRebootEx(rebootTarget_e rebootTarget)
 {
-    printf("cliRebootEx");
     cliPrint("\r\nRebooting");
     cliWriterFlush();
     waitForSerialPortToFinishTransmitting(cliPort);
@@ -3609,7 +3607,6 @@ static void cliRebootEx(rebootTarget_e rebootTarget)
 
 static void cliReboot(void)
 {
-	printf("CLI cliReboot");
     cliRebootEx(REBOOT_TARGET_FIRMWARE);
 }
 
@@ -4300,15 +4297,8 @@ static void cliSave(const char *cmdName, char *cmdline)
 {
     UNUSED(cmdline);
 
-	printf("CLI save");
-
     if (tryPrepareSave(cmdName)) {
-		printf("CLI save before writeEEPROM");
-
         writeEEPROM();
-
-		printf("CLI save after writeEEPROM");
-
         cliPrintHashLine("saving");
 
         if (strcasecmp(cmdline, "noreboot") == 0) {
