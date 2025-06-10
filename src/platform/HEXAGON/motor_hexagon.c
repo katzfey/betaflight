@@ -30,6 +30,7 @@
 
 static bool motorEnabled[HEXAGON_MAX_MOTORS];
 static float motorSpeed[HEXAGON_MAX_MOTORS];
+static unsigned motorMap[HEXAGON_MAX_MOTORS];
 static int motor_fd = -1;
 static serialReceiveCallbackPtr motorTelemCB;
 static uint8_t last_fb_idx;
@@ -201,7 +202,7 @@ static void send_esc_command(void)
 
     for (uint8_t i = 0; i < HEXAGON_MAX_MOTORS; i++) {
 
-        data[i] = pwm_to_esc(motorSpeed[i]);
+        data[i] = pwm_to_esc(motorSpeed[motorMap[i]]);
 
 		// TODO: How to configure the motor spin direction?
 		data[i] *= -1;
@@ -210,12 +211,8 @@ static void send_esc_command(void)
         data[i] &= 0xFFFE;
     }
 
-	// TODO: How to remap the motors?
-	int16_t tmp = data[0];
-	data[0] = data[1];
-	data[1] = tmp;
-
 	// TODO: If not armed zero out all PWM data
+	//       But also need to be able to spin motors from configurator!
 	// data[0] = data[1] = data[2] = data[3] = 0;
 
     const uint32_t now_ms = millis();
@@ -386,7 +383,6 @@ static const motorVTable_t vTable = {
 
 bool motorPwmDevInit(motorDevice_t *device, const motorDevConfig_t *motorConfig, uint16_t _idlePulse)
 {
-	(void) motorConfig;
 	(void) _idlePulse;
 
 	if (!device) {
@@ -400,6 +396,10 @@ bool motorPwmDevInit(motorDevice_t *device, const motorDevConfig_t *motorConfig,
 	if (motor_fd == -1) {
 		printf("ERROR: Failed to open ESC serial port");
 		return false;
+	}
+
+	for (int i = 0; i < HEXAGON_MAX_MOTORS; i++) {
+		motorMap[i] = motorConfig->motorOutputReordering[i];
 	}
 
 	(void) sl_client_disable_uart_tx_wait(motor_fd);
