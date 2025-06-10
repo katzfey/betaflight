@@ -31,6 +31,7 @@
 static bool motorEnabled[HEXAGON_MAX_MOTORS];
 static float motorSpeed[HEXAGON_MAX_MOTORS];
 static unsigned motorMap[HEXAGON_MAX_MOTORS];
+static bool reverseMotors;
 static int motor_fd = -1;
 static serialReceiveCallbackPtr motorTelemCB;
 static uint8_t last_fb_idx;
@@ -204,8 +205,7 @@ static void send_esc_command(void)
 
         data[i] = pwm_to_esc(motorSpeed[motorMap[i]]);
 
-		// TODO: How to configure the motor spin direction?
-		data[i] *= -1;
+		if (reverseMotors) data[i] *= -1;
 
         // Make sure feedback request bit is cleared for all ESCs
         data[i] &= 0xFFFE;
@@ -401,6 +401,11 @@ bool motorPwmDevInit(motorDevice_t *device, const motorDevConfig_t *motorConfig,
 	for (int i = 0; i < HEXAGON_MAX_MOTORS; i++) {
 		motorMap[i] = motorConfig->motorOutputReordering[i];
 	}
+
+	// Can only change spin direction for all motors, not each motor
+	// BTW: This parameter isn't supposed to control spin direction but
+	// we use it for that on VOXL
+	if (motorConfig->motorInversion) reverseMotors = true;
 
 	(void) sl_client_disable_uart_tx_wait(motor_fd);
 

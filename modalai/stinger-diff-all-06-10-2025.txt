@@ -28,6 +28,7 @@ set acc_calibration = -68,3,-39,1
 set blackbox_sample_rate = 1/1
 set blackbox_device = SERIAL
 set motor_idle = 300
+set motor_pwm_inversion = ON
 set motor_output_reordering = 1,0,2,3,4,5,6,7
 set align_board_pitch = 180
 set current_meter = ESC
