@@ -71,16 +71,19 @@ def py_cb_func(data, len):
             binary_data[i-1] = data_array[i]
         pympa.pipe_server_write(0, bytearray_to_const_void_ptr(binary_data), len-1);
     elif data_array[0] == 0x42:
-        print('Got reboot command')
-        rebooting = True
-        # Reset SLPI
-        betaflight.slpi_link_reset(None)
-        # Wait for SLPI to reboot
-        time.sleep(4)
-        print('Calling slpi_link_init to re-initialize')
-        result = betaflight.slpi_link_init(False, cb_func, b'betaflight.so')
-        print('slpi_link_init returned: ' + str(result))
-        rebooting = False
+        if not rebooting:
+            print('Got reboot command')
+            rebooting = True
+            # Reset SLPI
+            betaflight.slpi_link_reset(None)
+            # Wait for SLPI to reboot
+            time.sleep(4)
+            print('Calling slpi_link_init to re-initialize')
+            result = betaflight.slpi_link_init(False, cb_func, b'betaflight.so')
+            print('slpi_link_init returned: ' + str(result))
+            rebooting = False
+        # else:
+        #     print("Got duplicate reboot command while rebooting")
     else:
         print("Got unknown data packet" + str(data_array[0]))
 
