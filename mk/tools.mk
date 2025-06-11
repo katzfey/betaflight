@@ -43,6 +43,20 @@ endif
 
 ARM_SDK_FILE := $(notdir $(ARM_SDK_URL))
 # remove compression suffixes
+# To fix the error here:
+# 1. cd /opt/hexagon-sdk/4.1.0.4-lite/tools/HEXAGON_Tools/8.4.05/Tools/bin
+# 2. mkdir arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi
+# 3. cd arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/
+# 4. apt-get update
+# 5. apt install -y vim
+# 6. vim arm-none-eabi-gcc
+#        #!/bin/bash
+#        echo "arm-none-eabi-gcc (GNU Arm Embedded Toolchain 10-2020-q4-major) 10.2.1 20201104 (release)"
+#        echo "Copyright (C) 2020 Free Software Foundation, Inc."
+#        echo "This is free software; see the source for copying conditions.  There is NO"
+#        echo "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+# 7. chmod a+x arm-none-eabi-gcc
+# 8. cd /usr/local/workspace
 # ARM_SDK_DIR := $(TOOLS_DIR)/$(patsubst %.zip,%, 	\
 # 			    $(patsubst %.tar.xz,%, 	\
 # 			    $(notdir $(ARM_SDK_URL))))
