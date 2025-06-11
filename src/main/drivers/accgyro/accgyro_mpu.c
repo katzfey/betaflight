@@ -22,7 +22,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "platform.h"
 
@@ -135,8 +134,6 @@ busStatus_e mpuIntCallback(uint32_t arg)
 
 static void mpuIntExtiHandler(extiCallbackRec_t *cb)
 {
-	// printf("In mpuIntExtiHandler");
-
     gyroDev_t *gyro = container_of(cb, gyroDev_t, exti);
 
     // Ideally we'd use a timer to capture such information, but unfortunately the port used for EXTI interrupt does
@@ -165,14 +162,9 @@ static void mpuIntExtiHandler(extiCallbackRec_t *cb)
 
 static void mpuIntExtiInit(gyroDev_t *gyro)
 {
-	printf("*****************");
-	printf("In mpuIntExtiInit");
-
     if (gyro->mpuIntExtiTag == IO_TAG_NONE) {
         return;
     }
-
-	printf("*****************");
 
     const IO_t mpuIntIO = IOGetByTag(gyro->mpuIntExtiTag);
 
@@ -256,9 +248,6 @@ bool mpuAccReadSPI(accDev_t *acc)
         acc->ADCRaw[X] = __builtin_bswap16(accData[1]);
         acc->ADCRaw[Y] = __builtin_bswap16(accData[2]);
         acc->ADCRaw[Z] = __builtin_bswap16(accData[3]);
-
-		// printf("Accel Data: 0x%0.2x %d %d %d", acc->gyro->accDataReg, acc->ADCRaw[X], acc->ADCRaw[Y], acc->ADCRaw[Z]);
-
         break;
     }
 
@@ -272,13 +261,10 @@ bool mpuAccReadSPI(accDev_t *acc)
 
 bool mpuGyroReadSPI(gyroDev_t *gyro)
 {
-	// printf("In mpuGyroReadSPI");
     int16_t *gyroData = (int16_t *)gyro->dev.rxBuf;
     switch (gyro->gyroModeSPI) {
     case GYRO_EXTI_INIT:
     {
-		// printf("In mpuGyroReadSPI GYRO_EXTI_INIT");
-
         // Initialise the tx buffer to all 0xff
         memset(gyro->dev.txBuf, 0xff, 16);
 
@@ -302,7 +288,6 @@ bool mpuGyroReadSPI(gyroDev_t *gyro)
             {
                 // Interrupts are present, but no DMA
                 gyro->gyroModeSPI = GYRO_EXTI_INT;
-				// printf("In mpuGyroReadSPI setting GYRO_EXTI_INT");
             }
         } else {
             gyro->gyroModeSPI = GYRO_EXTI_NO_INT;
@@ -313,8 +298,6 @@ bool mpuGyroReadSPI(gyroDev_t *gyro)
     case GYRO_EXTI_INT:
     case GYRO_EXTI_NO_INT:
     {
-		// printf("In mpuGyroReadSPI GYRO_EXTI_INT / GYRO_EXTI_NO_INT");
-
         gyro->dev.txBuf[0] = gyro->gyroDataReg | 0x80;
 
         busSegment_t segments[] = {
@@ -332,9 +315,6 @@ bool mpuGyroReadSPI(gyroDev_t *gyro)
         gyro->gyroADCRaw[X] = __builtin_bswap16(gyroData[1]);
         gyro->gyroADCRaw[Y] = __builtin_bswap16(gyroData[2]);
         gyro->gyroADCRaw[Z] = __builtin_bswap16(gyroData[3]);
-
-		// printf("In mpuGyroReadSPI Data: %d %d %d", gyro->gyroADCRaw[X], gyro->gyroADCRaw[Y], gyro->gyroADCRaw[Z]);
-
         break;
     }
 
@@ -425,7 +405,6 @@ static bool detectSPISensorsAndUpdateDetectionResult(gyroDev_t *gyro, const gyro
         if (sensor != MPU_NONE) {
             gyro->mpuDetectionResult.sensor = sensor;
             busDeviceRegister(&gyro->dev);
-			printf("bus device registered");
             return true;
         }
     }
@@ -449,8 +428,6 @@ bool mpuDetect(gyroDev_t *gyro, const gyroDeviceConfig_t *config)
 {
     static busDevice_t bus;
     gyro->dev.bus = &bus;
-
-	printf("In mpuDetect. %p %p %d %u", gyro, config, config->busType, config->csnTag);
 
     // MPU datasheet specifies 30ms.
     delay(35);
