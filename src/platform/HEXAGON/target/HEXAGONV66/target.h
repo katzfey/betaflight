@@ -314,6 +314,11 @@ typedef struct
     void* test;
 } I2C_TypeDef;
 
+typedef struct
+{
+    void* test;
+} ADC_TypeDef;
+
 typedef struct {
     double timestamp;                   // in seconds
     double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
