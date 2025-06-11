@@ -262,39 +262,25 @@ static void sdCardAndFSInit(void)
 }
 #endif
 
-#include <stdio.h>
-
 void init(void)
 {
-	printf("In init");
-
 #if SERIAL_PORT_COUNT > 0
     printfSerialInit();
 #endif
 
-	printf("before systemInit");
-
     systemInit();
-
-	printf("before tasksInitData");
 
     // Initialize task data as soon as possible. Has to be done before tasksInit(),
     // and any init code that may try to modify task behaviour before tasksInit().
     tasksInitData();
 
-	printf("before IOInitGlobal");
-
     // initialize IO (needed for all IO operations)
     IOInitGlobal();
-
-	printf("before targetConfiguration");
 
 #if defined(USE_TARGET_CONFIG)
     // Call once before the config is loaded for any target specific configuration required to support loading the config
     targetConfiguration();
 #endif
-
-	printf("before configTargetPreInit");
 
 #if defined(USE_CONFIG_TARGET_PREINIT)
     configTargetPreInit();
@@ -331,18 +317,12 @@ void init(void)
 #error "CONFIG_IN_SDCARD and TARGET_BUS_INIT are mutually exclusive"
 #endif
 
-	printf("before pgResetAll");
-
     pgResetAll();
-
-	printf("before configureSPIBusses");
 
 #ifdef USE_SDCARD_SPI
     configureSPIBusses();
     initFlags |= SPI_BUSSES_INIT_ATTEMPTED;
 #endif
-
-	printf("before sdCardAndFSInit");
 
     sdCardAndFSInit();
     initFlags |= SD_INIT_ATTEMPTED;
@@ -408,15 +388,9 @@ void init(void)
 
 #endif // CONFIG_IN_EXTERNAL_FLASH || CONFIG_IN_MEMORY_MAPPED_FLASH
 
-	printf("before initEEPROM");
-
     initEEPROM();
 
-	printf("before ensureEEPROMStructureIsValid");
-
     ensureEEPROMStructureIsValid();
-
-	printf("before readEEPROM");
 
     bool readSuccess = readEEPROM();
 
@@ -435,8 +409,6 @@ void init(void)
 #endif
 
     debugMode = systemConfig()->debug_mode;
-
-	printf("before targetPreInit");
 
 #ifdef TARGET_PREINIT
     targetPreInit();
@@ -537,9 +509,6 @@ void init(void)
 #endif
 #endif // USE_MCO
 
-	printf("before timerInit");
-
-
 #ifdef USE_TIMER
     timerInit();  // timer must be initialized before any channel is allocated
 #endif
@@ -588,11 +557,7 @@ void init(void)
     initInverters(serialPinConfig());
 #endif
 
-	printf("before targetBusInit");
-
-
 #ifdef TARGET_BUS_INIT
-
     targetBusInit();
 
 #else
@@ -609,17 +574,12 @@ void init(void)
         initFlags |= QUAD_OCTO_SPI_BUSSES_INIT_ATTEMPTED;
     }
 
-	printf("before sdioPinConfigure");
-
 #if defined(USE_SDCARD_SDIO) && !defined(CONFIG_IN_SDCARD) && defined(STM32H7)
     sdioPinConfigure();
     SDIO_GPIO_Init();
 #endif
 
-	printf("after sdioPinConfigure");
-
 #ifdef USE_USB_MSC
-
 /* MSC mode will start after init, but will not allow scheduler to run,
  *  so there is no bottleneck in reading and writing data */
     mscInit();
@@ -657,16 +617,11 @@ void init(void)
     }
 #endif
 
-	printf("before persistentObjectWrite");
-
-
 #ifdef USE_PERSISTENT_MSC_RTC
     // if we didn't enter MSC mode then clear the persistent RTC value
     persistentObjectWrite(PERSISTENT_OBJECT_RTC_HIGH, 0);
     persistentObjectWrite(PERSISTENT_OBJECT_RTC_LOW, 0);
 #endif
-
-	printf("before i2cHardwareConfigure");
 
 #ifdef USE_I2C
     i2cHardwareConfigure(i2cConfig(0));
@@ -690,35 +645,23 @@ void init(void)
 
 #endif // TARGET_BUS_INIT
 
-	printf("before updateHardwareRevision");
-
 #ifdef USE_HARDWARE_REVISION_DETECTION
     updateHardwareRevision();
 #endif
-
-	printf("before rtc6705IOInit");
 
 #ifdef USE_VTX_RTC6705
     bool useRTC6705 = rtc6705IOInit(vtxIOConfig());
 #endif
 
-	printf("before cameraControlInit");
-
 #ifdef USE_CAMERA_CONTROL
     cameraControlInit();
 #endif
-
-	printf("before adcInit");
 
 #ifdef USE_ADC
     adcInit(adcConfig());
 #endif
 
-	printf("before initBoardAlignment");
-
     initBoardAlignment(boardAlignment());
-
-	printf("before sensorsAutodetect");
 
     if (!sensorsAutodetect()) {
         // if gyro was not detected due to whatever reason, notify and don't arm.
@@ -730,17 +673,11 @@ void init(void)
 
     systemState |= SYSTEM_STATE_SENSORS_READY;
 
-	printf("before gyroSetTargetLooptime");
-
     // Set the targetLooptime based on the detected gyro sampleRateHz and pid_process_denom
     gyroSetTargetLooptime(pidConfig()->pid_process_denom);
 
-	printf("before validateAndFixGyroConfig: PID denom %u", pidConfig()->pid_process_denom);
-
     // Validate and correct the gyro config or PID loop time if needed
     validateAndFixGyroConfig();
-
-	printf("before gyroSetTargetLooptime: PID denom %u", pidConfig()->pid_process_denom);
 
     // Now reset the targetLooptime as it's possible for the validation to change the pid_process_denom
     gyroSetTargetLooptime(pidConfig()->pid_process_denom);
@@ -750,16 +687,10 @@ void init(void)
     initDshotTelemetry(gyro.targetLooptime);
 #endif
 
-	printf("before gyroInitFilters");
-
     // Finally initialize the gyro filtering
     gyroInitFilters();
 
-	printf("before pidInit");
-
     pidInit(currentPidProfile);
-
-	printf("before mixerInitProfile");
 
     mixerInitProfile();
 
@@ -788,8 +719,6 @@ void init(void)
     pinioBoxInit(pinioBoxConfig());
 #endif
 
-	printf("before LED1_ON");
-
     LED1_ON;
     LED0_OFF;
     LED2_OFF;
@@ -811,35 +740,16 @@ void init(void)
     LED0_OFF;
     LED1_OFF;
 
-	printf("before imuInit");
-
     imuInit();
-
-	printf("before failsafeInit");
 
     failsafeInit();
 
-	printf("before rxInit");
-
     rxInit();
 
-	printf("after rxInit");
-
-    if (featureIsEnabled(FEATURE_GPS)) {
-		printf("FEATURE_GPS is enabled");
-    }
-
 #ifdef USE_GPS
-
-	printf("before featureIsEnabled");
-
     if (featureIsEnabled(FEATURE_GPS)) {
-
-		printf("before gpsInit");
-
         gpsInit();
 #ifdef USE_GPS_LAP_TIMER
-		printf("before gpsLapTimerInit");
         gpsLapTimerInit();
 #endif // USE_GPS_LAP_TIMER
     }
@@ -882,8 +792,6 @@ void init(void)
 #endif
 
 #ifdef USE_SDCARD
-	printf("before sdcardConfig");
-
     if (sdcardConfig()->mode) {
         if (!(initFlags & SD_INIT_ATTEMPTED)) {
             sdCardAndFSInit();
@@ -892,22 +800,16 @@ void init(void)
     }
 #endif
 #ifdef USE_BLACKBOX
-	printf("before blackboxInit");
     blackboxInit();
 #endif
 
 #ifdef USE_ACC
-	printf("before mixerConfig");
     if (mixerConfig()->mixerMode == MIXER_GIMBAL) {
         accStartCalibration();
     }
 #endif
-	printf("before gyroStartCalibration");
-
     gyroStartCalibration(false);
 #ifdef USE_BARO
-	printf("before baroStartCalibration");
-
     baroStartCalibration();
 #endif
 
@@ -958,8 +860,6 @@ void init(void)
 #ifdef USE_PERSISTENT_STATS
     statsInit();
 #endif
-
-	printf("before mspInit");
 
     // Initialize MSP
     mspInit();
@@ -1051,9 +951,6 @@ void init(void)
     }
 #endif
 
-	printf("before dashboardInit");
-
-
 #ifdef USE_DASHBOARD
     // Dashbord will register with CMS by itself.
     if (featureIsEnabled(FEATURE_DASHBOARD)) {
@@ -1074,8 +971,6 @@ void init(void)
     }
 #endif
 
-	printf("before setArmingDisabled");
-
     setArmingDisabled(ARMING_DISABLED_BOOT_GRACE_TIME);
 
 // allocate SPI DMA streams before motor timers
@@ -1085,15 +980,9 @@ void init(void)
 #endif
 
 #ifdef USE_MOTOR
-	printf("before motorPostInit");
-
     motorPostInit();
-	printf("before motorEnable");
-
     motorEnable();
 #endif
-
-	printf("before spiInitBusDMA");
 
 // allocate SPI DMA streams after motor timers as SPI DMA allocate will always be possible
 #if defined(USE_SPI) && defined(USE_SPI_DMA_ENABLE_LATE) && !defined(USE_SPI_DMA_ENABLE_EARLY)
@@ -1110,27 +999,17 @@ void init(void)
     posHoldInit();
 #endif
 
-	printf("before gpsRescueInit");
-
 #ifdef USE_GPS_RESCUE
     if (featureIsEnabled(FEATURE_GPS)) {
         gpsRescueInit();
     }
 #endif
 
-	printf("before debugInit");
-
-
     debugInit();
 
     unusedPinsInit();
 
-	printf("before tasksInit");
-
     tasksInit();
 
     systemState |= SYSTEM_STATE_READY;
-
-	printf("END OF INIT!!!");
-
 }
