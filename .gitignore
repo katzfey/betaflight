@@ -1,7 +1,3 @@
-test.so
-test.dis
-unresolved-symbols.start
-ur.txt
 *.o
 .DS_Store
 *~
