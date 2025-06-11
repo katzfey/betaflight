@@ -18,7 +18,6 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -38,8 +37,6 @@ int betaflight_main(int argc, char * argv[])
     UNUSED(argc);
     UNUSED(argv);
 #endif
-	printf("In betaflight_main");
-
     init();
 
     run();
@@ -47,12 +44,16 @@ int betaflight_main(int argc, char * argv[])
     return 0;
 }
 
+int main(int argc, char * argv[])
+{
+	return betaflight_main(argc, argv);
+}
+
 void FAST_CODE run(void)
 {
     while (true) {
-		// printf("Calling scheduler");
         scheduler();
-#if defined(SIMULATOR_BUILD)
+#ifdef SIMULATOR_BUILD
         delayMicroseconds_real(50); // max rate 20kHz
 #endif
     }
