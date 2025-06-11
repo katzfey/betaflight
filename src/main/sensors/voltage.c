@@ -145,9 +145,7 @@ void pgResetFn_voltageSensorADCConfig(voltageSensorADCConfig_t *instance)
     }
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunneeded-internal-declaration"
-static const uint8_t voltageMeterAdcChannelMap[] = {
+MAYBE_UNUSED static const uint8_t voltageMeterAdcChannelMap[] = {
     ADC_BATTERY,
 #ifdef ADC_POWER_12V
     ADC_POWER_12V,
@@ -159,7 +157,6 @@ static const uint8_t voltageMeterAdcChannelMap[] = {
     ADC_POWER_5V,
 #endif
 };
-#pragma GCC diagnostic pop
 
 STATIC_UNIT_TESTED uint16_t voltageAdcToVoltage(const uint16_t src, const voltageSensorADCConfig_t *config)
 {
